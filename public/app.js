@@ -35,6 +35,7 @@
     const minSizeInput = document.getElementById('minSizeInput');
     const gridSlider = document.getElementById('gridSlider');
     const themeToggle = document.getElementById('themeToggle');
+    const langToggle = document.getElementById('langToggle');
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightboxImg');
     const lightboxUrl = document.getElementById('lightboxUrl');
@@ -97,6 +98,120 @@
     });
 
     // ══════════════════════════════════════════
+    //  Localization (Georgian & English)
+    // ══════════════════════════════════════════
+    const TRANSLATIONS = {
+        ka: {
+            title: "სურათების ძებნა",
+            hint: "მაგ: https://unsplash.com, https://wikipedia.org",
+            loading: "სურათების ძებნა...",
+            sortDefault: "სორტ: ნაგულისხმევი",
+            sortNameAsc: "სახელი A→Z",
+            sortNameDesc: "სახელი Z→A",
+            sortSizeDesc: "ზომა ↓",
+            sortSizeAsc: "ზომა ↑",
+            minSize: "მინ. ზომა",
+            imagesLabel: "სურათი",
+            shownLabel: "ნაჩვენები",
+            downloadAll: "ყველას გადმოწერა",
+            exportUrls: "URL-ების ექსპორტი",
+            deselect: "მონიშნული",
+            clear: "გასუფთავება",
+            emptyTitle: "სურათები ვერ მოიძებნა",
+            emptyDesc: "ამ საიტზე სურათები ვერ ვიპოვეთ, ან საიტი ბლოკავს მოთხოვნებს.",
+            noFilterTitle: "ფილტრი შედეგი ვერ მოიძებნა",
+            noFilterDesc: "სცადე სხვა ძებნა ან ფილტრის გასუფთავება.",
+            initialText: "ჩაგდე ლინკი და დაიწყე",
+            zoom: "გადიდება",
+            download: "გადმოწერა",
+            broken: "ვერ ჩაიტვირთა",
+            copyUrl: "URL კოპირება",
+            toastCopied: "📋 URL კოპირებულია!",
+            toastDeselected: "✅ მონიშვნა მოხსნილია",
+            toastZipCreated: "📦 ZIP იქმნება...",
+            toastZipDone: "✅ ZIP გადმოწერილია!",
+            toastZipFail: "❌ ფოტოების გადმოწერა ვერ მოხერხდა",
+            toastExport: "📋 URL ექსპორტირებულია",
+            toastDownloaded: "✅ გადმოიწერა",
+        },
+        en: {
+            title: "Search Images",
+            hint: "e.g., https://unsplash.com, https://wikipedia.org",
+            loading: "Searching images...",
+            sortDefault: "Sort: Default",
+            sortNameAsc: "Name A→Z",
+            sortNameDesc: "Name Z→A",
+            sortSizeDesc: "Size ↓",
+            sortSizeAsc: "Size ↑",
+            minSize: "Min Size",
+            imagesLabel: "images",
+            shownLabel: "shown",
+            downloadAll: "Download All",
+            exportUrls: "Export URLs",
+            deselect: "selected",
+            clear: "Clear",
+            emptyTitle: "No images found",
+            emptyDesc: "We couldn't find images on this site, or the site is blocking requests.",
+            noFilterTitle: "No filtered results",
+            noFilterDesc: "Try a different search or clear the filters.",
+            initialText: "Paste a link and start",
+            zoom: "Zoom In",
+            download: "Download",
+            broken: "Failed to load",
+            copyUrl: "Copy URL",
+            toastCopied: "📋 URL copied!",
+            toastDeselected: "✅ Selection cleared",
+            toastZipCreated: "📦 Creating ZIP...",
+            toastZipDone: "✅ ZIP downloaded successfully!",
+            toastZipFail: "❌ Failed to download images",
+            toastExport: "📋 URLs exported",
+            toastDownloaded: "✅ Downloaded",
+        }
+    };
+
+    let currentLang = localStorage.getItem('scraper-lang') || 'ka';
+
+    function applyLanguage(lang) {
+        currentLang = lang;
+        localStorage.setItem('scraper-lang', lang);
+        
+        if (langToggle) {
+            langToggle.textContent = lang === 'ka' ? 'EN' : 'KA';
+        }
+
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            const translation = TRANSLATIONS[lang][key];
+            if (translation) {
+                const icon = el.querySelector('i, svg');
+                if (icon) {
+                    const iconHtml = icon.outerHTML;
+                    el.innerHTML = `${iconHtml} ${translation}`;
+                } else {
+                    el.textContent = translation;
+                }
+            }
+        });
+
+        // Translate placeholders
+        if (urlInput) {
+            urlInput.placeholder = lang === 'ka' ? 'https://example.com' : 'https://example.com';
+        }
+
+        updateSelectionUI();
+        refreshIcons();
+    }
+
+    if (langToggle) {
+        langToggle.addEventListener('click', () => {
+            applyLanguage(currentLang === 'ka' ? 'en' : 'ka');
+        });
+    }
+
+    // Initialize language
+    applyLanguage(currentLang);
+
+    // ══════════════════════════════════════════
     //  URL History (localStorage)
     // ══════════════════════════════════════════
     function getHistory() {
@@ -121,10 +236,6 @@
     }
 
     renderHistory();
-
-    // ══════════════════════════════════════════
-    //  Toast
-    // ══════════════════════════════════════════
     let toastTimer;
     function showToast(msg, duration = 3000) {
         toast.textContent = msg;

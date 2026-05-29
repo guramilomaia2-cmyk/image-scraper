@@ -1215,7 +1215,7 @@ body {
 
 .header {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
     align-items: center;
     gap: 16px;
     text-align: left;
@@ -1266,19 +1266,30 @@ body {
     margin-bottom: 0;
 }
 
-.theme-toggle {
+.theme-toggle,
+.lang-toggle {
     position: static;
     width: 40px;
     height: 40px;
     border-radius: 8px;
     color: var(--text);
     background: var(--surface);
+    border: 1px solid var(--border);
     box-shadow: none;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition), border-color var(--transition), transform var(--transition);
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover,
+.lang-toggle:hover {
     transform: translateY(-1px);
     border-color: var(--accent);
+    background: var(--surface-hover);
 }
 
 .search-card,
