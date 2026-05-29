@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ka" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Image Scraper — სურათების ამოღება</title>
+    <meta name="description" content="ჩაგდე ნებისმიერი საიტის ლინკი და ამოიღე ყველა სურათი ერთ კლიკში." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23f58220%22/><text x=%2250%22 y=%2267%22 text-anchor=%22middle%22 font-size=%2258%22 font-family=%22Arial%22 font-weight=%22700%22 fill=%22white%22>Z</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">Z</span>
+                <h1>Product Image Scraper</h1>
+            </div>
+            <div class="api-limits-wrap" id="apiLimitsWrap" style="display: none;">
+                <div class="api-limits-badge">
+                    <i data-lucide="zap" class="icon limits-icon"></i>
+                    <span class="limits-text">ScraperAPI: <strong id="limitsLeft">...</strong> / <span id="limitsTotal">...</span></span>
+                </div>
+            </div>
+            <button id="themeToggle" class="theme-toggle" title="თემის შეცვლა"><i data-lucide="moon" class="icon"></i></button>
+        </header>
+
+        <!-- Search Bar -->
+        <div class="search-card">
+            <div class="input-group">
+                <i data-lucide="link-2" class="icon input-icon"></i>
+                <input type="url" id="urlInput" placeholder="https://example.com" autocomplete="off" spellcheck="false"
+                    list="urlHistory" />
+                <datalist id="urlHistory"></datalist>
+                <button id="scrapeBtn" class="btn-primary scrape-btn-enhanced">
+                    <i data-lucide="search-check" class="icon btn-icon"></i>
+                    <span class="btn-text">სურათების ძებნა</span>
+                </button>
+            </div>
+            <div class="input-hint">მაგ: https://unsplash.com, https://wikipedia.org</div>
+        </div>
+
+        <!-- Status / Error -->
+        <div id="statusBar" class="status-bar hidden"></div>
+
+        <!-- Loading -->
+        <div id="loadingState" class="loading-state hidden">
+            <div class="spinner"></div>
+            <p>სურათების ძებნა...</p>
+        </div>
+
+        <!-- Filters & Controls Bar -->
+        <div id="controlsBar" class="controls-bar hidden">
+            <!-- Sort + min size + grid slider -->
+            <div class="controls-right">
+                <select id="sortSelect" class="sort-select">
+                    <option value="default">სორტ: ნაგულისხმევი</option>
+                    <option value="name-asc">სახელი A→Z</option>
+                    <option value="name-desc">სახელი Z→A</option>
+                    <option value="size-desc">ზომა ↓</option>
+                    <option value="size-asc">ზომა ↑</option>
+                </select>
+                <div class="min-size-wrap">
+                    <label class="min-size-label">მინ. ზომა</label>
+                    <input type="number" id="minSizeInput" class="min-size-input" value="50" min="0" max="9999" />
+                    <span class="min-size-unit">px</span>
+                </div>
+                <div class="grid-slider-wrap" title="გრიდის ზომა">
+                    <i data-lucide="grid-3x3" class="icon grid-icon"></i>
+                    <input type="range" id="gridSlider" min="140" max="400" value="220" class="grid-slider" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Header -->
+        <div id="resultsHeader" class="results-header hidden">
+            <div class="results-info">
+                <span id="imageCount" class="count-badge">0</span>
+                <span class="results-label">სურათი</span>
+                <span id="filteredCount" class="filtered-label hidden">(<span id="filteredNum">0</span>
+                    ნაჩვენები)</span>
+            </div>
+            <div class="results-actions">
+                <button id="downloadAllBtn" class="btn-download-action">
+                    <i data-lucide="download" class="icon"></i> <span id="downloadBtnLabel">ყველას გადმოწერა</span>
+                </button>
+                <button id="exportUrlsBtn" class="btn-secondary">
+                    <i data-lucide="clipboard-list" class="icon"></i> URL-ების ექსპორტი
+                </button>
+                <button id="deselectAllBtn" class="btn-secondary btn-deselect hidden">
+                    <i data-lucide="check-square" class="icon"></i> <span id="selectedCount">0</span> მონიშნული
+                </button>
+                <button id="clearBtn" class="btn-ghost"><i data-lucide="x" class="icon"></i> გასუფთავება</button>
+            </div>
+        </div>
+
+        <!-- Image Grid -->
+        <div id="imageGrid" class="image-grid"></div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state hidden">
+            <div class="empty-icon"><i data-lucide="image-off" class="icon-lg"></i></div>
+            <h3>სურათები ვერ მოიძებნა</h3>
+            <p>ამ საიტზე სურათები ვერ ვიპოვეთ, ან საიტი ბლოკავს მოთხოვნებს.</p>
+        </div>
+
+        <!-- No Filter Results -->
+        <div id="noFilterState" class="empty-state hidden">
+            <div class="empty-icon"><i data-lucide="filter-x" class="icon-lg"></i></div>
+            <h3>ფილტრი შედეგი ვერ მოიძებნა</h3>
+            <p>სცადე სხვა ძებნა ან ფილტრის გასუფთავება.</p>
+        </div>
+
+        <!-- Initial State -->
+        <div id="initialState" class="initial-state">
+            <div class="initial-icon"><i data-lucide="scan-search" class="icon-lg"></i></div>
+            <p>ჩაგდე ლინკი და დაიწყე</p>
+        </div>
+    </div>
+
+    <!-- Image Lightbox -->
+    <div id="lightbox" class="lightbox hidden">
+        <div class="lightbox-backdrop" id="lightboxBackdrop"></div>
+        <div class="lightbox-content">
+            <button class="lightbox-close" id="lightboxClose"><i data-lucide="x" class="icon"></i></button>
+            <button class="lightbox-nav lightbox-prev" id="lightboxPrev">‹</button>
+            <button class="lightbox-nav lightbox-next" id="lightboxNext">›</button>
+            <img id="lightboxImg" src="" alt="Preview" />
+            <div class="lightbox-footer">
+                <div class="lightbox-meta">
+                    <span id="lightboxUrl" class="lightbox-url"></span>
+                    <div class="lightbox-meta-row">
+                        <span id="lightboxResolution" class="lightbox-resolution"></span>
+                        <span id="lightboxFileSize" class="lightbox-filesize"></span>
+                        <span id="lightboxIndex" class="lightbox-index"></span>
+                    </div>
+                </div>
+                <div class="lightbox-actions">
+                    <button id="lightboxCopy" class="btn-icon-only" title="URL კოპირება"><i data-lucide="copy" class="icon"></i></button>
+                    <a id="lightboxDownload" class="btn-primary btn-sm" target="_blank" rel="noopener"><i data-lucide="download" class="icon"></i> გადმოწერა</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

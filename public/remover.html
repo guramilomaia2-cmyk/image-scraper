@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Background Remover (RMBG-1.4)</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖼️</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Helper function for logging to UI
+        window.logToUI = (message) => {
+            console.log(message);
+            const debugLog = document.getElementById('debug-log');
+            if (debugLog) {
+                const timestamp = new Date().toLocaleTimeString();
+                debugLog.innerText = `[${timestamp}] ${message}\n` + debugLog.innerText;
+            }
+        };
+
+        logToUI("Script active. Ready for API Key.");
+
+        // Application State
+        const state = {
+            isProcessing: false,
+            // Pre-fill with user provided key, fallback to local storage
+            apiKey: 'BMcNuCZHzdnHixswHmDCutEP'
+        };
+
+        // DOM Elements
+        const elements = {};
+
+        // Initialize app function
+        function initApp() {
+            logToUI("App initializing (remove.bg)...");
+
+            // Initialize elements
+            ['drop-zone', 'file-input', 'result-area', 'canvas-container',
+                'loading-state', 'loading-text', 'loading-subtext', 'download-btn',
+                'original-image', 'processed-image', 'api-key-input', 'save-key-btn'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) elements[id] = el;
+                });
+
+            // Check for locally saved key to override hardcoded if needed (optional)
+            const savedKey = localStorage.getItem('removebg-api-key');
+            if (savedKey) {
+                state.apiKey = savedKey;
+            }
+
+            if (elements['api-key-input']) {
+                elements['api-key-input'].value = state.apiKey;
+            }
+
+            if (elements['drop-zone'] && elements['file-input']) {
+                setupEventListeners();
+                logToUI("Ready! API Key loaded.");
+            }
+        }
+
+        // Run initialization
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+
+        function setupEventListeners() {
+            const dropZone = elements['drop-zone'];
+            const fileInput = elements['file-input'];
+            const saveKeyBtn = elements['save-key-btn'];
+            const apiKeyInput = elements['api-key-input'];
+
+            // Save API Key
+            if (saveKeyBtn && apiKeyInput) {
+                saveKeyBtn.addEventListener('click', () => {
+                    const key = apiKeyInput.value.trim();
+                    if (key) {
+                        localStorage.setItem('removebg-api-key', key);
+                        state.apiKey = key;
+                        alert('API Key saved!');
+                        logToUI("API Key saved to local storage.");
+                    } else {
+                        alert('Please enter a valid key.');
+                    }
+                });
+            }
+
+            if (!dropZone) return;
+
+            // Drag & Drop
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-active');
+            });
+
+            ['dragleave', 'dragend', 'drop'].forEach(event => {
+                dropZone.addEventListener(event, () => dropZone.classList.remove('drag-active'));
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files[0];
+                handleFile(file);
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                handleFile(file);
+            });
+        }
+
+        async function handleFile(file) {
+            if (!state.apiKey) {
+                alert('Please enter your remove.bg API Key first!');
+                if (elements['api-key-input']) elements['api-key-input'].focus();
+                return;
+            }
+
+            if (!file || !file.type.startsWith('image/')) {
+                alert('Please upload an image file.');
+                return;
+            }
+
+            logToUI(`Processing file: ${file.name}`);
+
+            // Reset UI
+            elements['drop-zone'].classList.add('hidden');
+            elements['result-area'].classList.remove('hidden');
+            elements['loading-state'].classList.remove('hidden');
+            elements['processed-image'].style.display = 'none';
+            elements['download-btn'].disabled = true;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                elements['original-image'].src = e.target.result;
+                elements['original-image'].classList.remove('hidden');
+
+                // Wait for image to load in DOM
+                await new Promise(r => setTimeout(r, 100)); // Slight buffer
+
+                await processImage(file);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function processImage(file) {
+            try {
+                if (state.isProcessing) return;
+                state.isProcessing = true;
+
+                elements['loading-text'].innerText = "Removing Background...";
+                elements['loading-subtext'].innerText = "Sending to remove.bg servers...";
+                logToUI("Sending request to remove.bg API...");
+
+                const formData = new FormData();
+                formData.append('image_file', file);
+                formData.append('size', 'auto');
+
+                const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+                    method: 'POST',
+                    headers: {
+                        'X-Api-Key': state.apiKey
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.errors?.[0]?.title || `API Error: ${response.status}`);
+                }
+
+                logToUI("Success! Response received.");
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+
+                // Display result
+                elements['processed-image'].src = url;
+                elements['processed-image'].style.display = 'block';
+                elements['loading-state'].classList.add('hidden');
+
+                // Setup download
+                const btn = elements['download-btn'];
+                btn.disabled = false;
+                btn.onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `nobg-${file.name.replace(/\.[^/.]+$/, "")}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                };
+
+            } catch (error) {
+                console.error("Processing failed:", error);
+                logToUI(`ERROR: ${error.message}`);
+                alert(`Processing failed: ${error.message}`);
+                window.resetApp();
+            } finally {
+                state.isProcessing = false;
+            }
+        }
+
+        window.setBackground = (color) => {
+            const container = elements['canvas-container'];
+            if (color === 'transparent') {
+                container.className = 'relative min-h-[400px] flex items-center justify-center p-8 checkerboard';
+                container.style.backgroundColor = '';
+            } else {
+                container.className = 'relative min-h-[400px] flex items-center justify-center p-8';
+                container.style.backgroundColor = color;
+            }
+        };
+
+        window.resetApp = () => {
+            elements['drop-zone'].classList.remove('hidden');
+            elements['result-area'].classList.add('hidden');
+            elements['file-input'].value = '';
+            elements['processed-image'].src = '';
+            elements['original-image'].src = '';
+            state.isProcessing = false;
+            logToUI("App reset.");
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .checkerboard {
+            background-color: #f0f0f0;
+            background-image:
+                linear-gradient(45deg, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%, #ddd),
+                linear-gradient(45deg, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%, #ddd);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+
+        .drag-active {
+            border-color: #4F46E5;
+            background-color: #EEF2FF;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                    </path>
+                </svg>
+                <div class="flex flex-col">
+                    <h1 class="text-xl font-bold tracking-tight leading-none">AI Remover</h1>
+                    <span class="text-xs text-indigo-600 font-medium">Engine: remove.bg (Official API)</span>
+                </div>
+            </div>
+            <a href="/" class="text-sm font-medium text-gray-500 hover:text-gray-900">Back to Scraper</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center justify-center p-4 sm:p-8">
+
+        <div class="w-full max-w-4xl space-y-8">
+
+            <!-- API Key Input -->
+            <div
+                class="bg-indigo-50 border border-indigo-100 rounded-lg p-4 flex flex-col sm:flex-row gap-2 items-center justify-between">
+                <div class="flex-1 w-full">
+                    <label class="block text-xs font-semibold text-indigo-900 mb-1">REMOVE.BG API KEY
+                        (Pre-filled)</label>
+                    <input type="password" id="api-key-input" placeholder="Paste your API key here..."
+                        class="w-full px-3 py-2 border border-indigo-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <button id="save-key-btn"
+                    class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 transition">
+                    Update Key
+                </button>
+            </div>
+
+            <!-- Hero Text -->
+            <div class="text-center space-y-2">
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Professional Background Removal</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Using the official <b>remove.bg</b> API
+                    for industry-standard quality on any image.</p>
+            </div>
+
+            <!-- Upload Area -->
+            <div id="drop-zone"
+                class="relative group border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center hover:border-indigo-500 transition-colors cursor-pointer bg-white">
+                <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    accept="image/*">
+                <div class="space-y-4 pointer-events-none">
+                    <div
+                        class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-lg font-semibold text-gray-900">Click or drag image here</p>
+                        <p class="text-sm text-gray-500">Processing happens locally on your device</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Processing / Result Area -->
+            <div id="result-area" class="hidden bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+
+                <!-- Toolbar -->
+                <div
+                    class="border-b border-gray-100 p-4 flex flex-wrap items-center justify-between gap-4 bg-gray-50/50">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-gray-700">Background:</span>
+                        <button
+                            class="w-8 h-8 rounded-full border border-gray-300 checkerboard focus:ring-2 ring-indigo-500 ring-offset-2"
+                            onclick="window.setBackground('transparent')" title="Transparent"></button>
+                        <button
+                            class="w-8 h-8 rounded-full border border-gray-300 bg-white focus:ring-2 ring-indigo-500 ring-offset-2"
+                            onclick="window.setBackground('white')" title="White"></button>
+                        <button
+                            class="w-8 h-8 rounded-full border border-gray-300 bg-black focus:ring-2 ring-indigo-500 ring-offset-2"
+                            onclick="window.setBackground('black')" title="Black"></button>
+                        <input type="color"
+                            class="w-8 h-8 rounded-full border border-gray-300 p-0 overflow-hidden cursor-pointer"
+                            onchange="window.setBackground(this.value)" title="Custom Color">
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button id="download-btn"
+                            class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            Download
+                        </button>
+                        <button onclick="window.resetApp()"
+                            class="text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Canvas Area -->
+                <div class="relative min-h-[400px] flex items-center justify-center p-8 checkerboard"
+                    id="canvas-container">
+                    <div id="loading-state"
+                        class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 z-10 backdrop-blur-sm">
+                        <div
+                            class="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4">
+                        </div>
+                        <p class="text-lg font-medium text-gray-900" id="loading-text">Removing background...</p>
+                        <p class="text-sm text-gray-500 mt-2" id="loading-subtext">Calculating...</p>
+                    </div>
+                    <img id="original-image"
+                        class="hidden absolute top-0 left-0 w-full h-full object-contain opacity-20 pointer-events-none"
+                        alt="Original">
+                    <img id="processed-image"
+                        class="relative max-h-[600px] max-w-full object-contain shadow-lg rounded-lg z-0"
+                        alt="Processed">
+                </div>
+            </div>
+
+            <!-- Debug Log -->
+            <div class="mt-8 p-4 bg-gray-900 rounded-lg shadow-inner overflow-hidden">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Debug Log</h3>
+                <pre id="debug-log"
+                    class="text-xs text-green-400 font-mono h-32 overflow-y-auto whitespace-pre-wrap">Waiting for action...</pre>
+            </div>
+        </div>
+    </main>
+
+
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-100 py-8 text-center text-sm text-gray-500">
+        <p>Powered by <a href="https://www.remove.bg/api" target="_blank"
+                class="text-indigo-600 hover:underline">remove.bg API</a></p>
+    </footer>
+</body>
+
+</html>
