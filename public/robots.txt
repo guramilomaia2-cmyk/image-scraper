@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://aquamarine-semolina-7dcbba.netlify.app/sitemap.xml
+Sitemap: https://extractorforimage.netlify.app/sitemap.xml
