@@ -199,6 +199,21 @@
         }
 
         updateSelectionUI();
+        
+        // Dynamic re-render if images are already on display
+        if (allImages.length > 0) {
+            applyFiltersAndSort();
+            // Also update the status bar if it has text
+            if (!statusBar.classList.contains('hidden')) {
+                const presetText = currentDomainPreset ? ` • Preset: ${currentDomainPreset}` : '';
+                const count = allImages.length;
+                const statusCount = lang === 'ka' ? `${count} სურათი` : `${count} images`;
+                statusBar.textContent = lang === 'ka'
+                    ? `✅ ${statusCount} ნაპოვნია${presetText}`
+                    : `✅ ${statusCount} found${presetText}`;
+            }
+        }
+        
         refreshIcons();
     }
 
@@ -323,9 +338,11 @@
         deselectAllBtn.classList.toggle('hidden', count === 0);
         const labelEl = document.getElementById('downloadBtnLabel');
         if (labelEl) {
-            labelEl.textContent = count > 0
-                ? `გადმოწერა (${count})`
-                : 'ყველას გადმოწერა';
+            if (currentLang === 'ka') {
+                labelEl.textContent = count > 0 ? `გადმოწერა (${count})` : 'ყველას გადმოწერა';
+            } else {
+                labelEl.textContent = count > 0 ? `Download (${count})` : 'Download All';
+            }
         }
     }
 
@@ -344,7 +361,7 @@
         selectedUrls.clear();
         document.querySelectorAll('.image-card.selected').forEach(c => c.classList.remove('selected'));
         updateSelectionUI();
-        showToast('✅ მონიშვნა მოხსნილია');
+        showToast(currentLang === 'ka' ? '✅ მონიშვნა მოხსნილია' : '✅ Selection cleared');
     });
 
     // ══════════════════════════════════════════
@@ -638,6 +655,9 @@
             .slice(0, 45);
     }
 
+    // ══════════════════════════════════════════
+    //  Event listeners & operations
+    // ══════════════════════════════════════════
     function productHintMatchScore(url) {
         if (!currentProductHints.length) return 0;
 
@@ -1111,13 +1131,18 @@
             const isGif = ext === 'gif';
             const sizeStr = fileSizeCache[imgUrl] || '';
 
+            const zoomText = currentLang === 'ka' ? 'გადიდება' : 'Zoom In';
+            const copyTitle = currentLang === 'ka' ? 'URL კოპირება' : 'Copy URL';
+            const downloadTitle = currentLang === 'ka' ? 'გადმოწერა (სწორი ფორმატით)' : 'Download (real format)';
+            const brokenText = currentLang === 'ka' ? 'ვერ ჩაიტვირთა' : 'Failed to load';
+
             card.innerHTML = `
         <div class="image-thumb-wrap">
           <div class="select-check">✓</div>
           ${isGif ? '<span class="gif-badge">GIF</span>' : ''}
           <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(filename)}" loading="lazy" />
           <div class="img-overlay">
-            <button class="img-overlay-btn" data-action="preview"><i data-lucide="zoom-in" class="icon"></i> გადიდება</button>
+            <button class="img-overlay-btn" data-action="preview"><i data-lucide="zoom-in" class="icon"></i> ${zoomText}</button>
           </div>
         </div>
         <div class="image-card-footer">
@@ -1129,8 +1154,8 @@
             ${sizeStr ? `<span class="image-size-badge">${escapeHtml(sizeStr)}</span>` : '<span class="image-size-badge" data-size-placeholder></span>'}
           </div>
           <div class="card-actions">
-            <button class="copy-url-btn" data-action="copy" title="URL კოპირება"><i data-lucide="copy" class="icon"></i></button>
-            <button class="download-btn" data-action="download" title="გადმოწერა (სწორი ფორმატით)"><i data-lucide="download" class="icon"></i></button>
+            <button class="copy-url-btn" data-action="copy" title="${copyTitle}"><i data-lucide="copy" class="icon"></i></button>
+            <button class="download-btn" data-action="download" title="${downloadTitle}"><i data-lucide="download" class="icon"></i></button>
           </div>
         </div>
       `;
@@ -1141,7 +1166,7 @@
                 card.querySelector('.image-thumb-wrap').innerHTML = `
           <div class="image-broken">
             <span class="broken-icon">🚫</span>
-            <span>ვერ ჩაიტვირთა</span>
+            <span>${brokenText}</span>
           </div>`;
             });
 
@@ -1259,7 +1284,7 @@
 
             // 4. Save
             saveAs(blob, dName);
-            showToast(`✅ გადმოიწერა: ${dName}`);
+            showToast(currentLang === 'ka' ? `✅ გადმოიწერა: ${dName}` : `✅ Downloaded: ${dName}`);
         } catch (err) {
             console.error('Download failed', err);
             // Fallback: open in new tab
@@ -1275,8 +1300,9 @@
     //  Clipboard
     // ══════════════════════════════════════════
     function copyToClipboard(text) {
+        const copiedMsg = currentLang === 'ka' ? '📋 URL კოპირებულია!' : '📋 URL copied!';
         navigator.clipboard.writeText(text).then(() => {
-            showToast('📋 URL კოპირებულია!');
+            showToast(copiedMsg);
         }).catch(() => {
             // Fallback
             const ta = document.createElement('textarea');
@@ -1287,7 +1313,7 @@
             ta.select();
             document.execCommand('copy');
             document.body.removeChild(ta);
-            showToast('📋 URL კოპირებულია!');
+            showToast(copiedMsg);
         });
     }
 
@@ -1340,9 +1366,6 @@
         }
     }
 
-    // ══════════════════════════════════════════
-    //  Event listeners & operations
-    // ══════════════════════════════════════════
     function closeLightbox() {
         lightbox.classList.add('hidden');
         lightboxImg.src = '';
@@ -1398,11 +1421,16 @@
         const toDownload = selectedUrls.size > 0 ? [...selectedUrls] : displayImages;
         if (!toDownload.length) return;
 
-        const label = selectedUrls.size > 0 ? `${selectedUrls.size} მონიშნული` : 'ყველა';
+        const label = selectedUrls.size > 0 
+            ? (currentLang === 'ka' ? `${selectedUrls.size} მონიშნული` : `${selectedUrls.size} selected`)
+            : (currentLang === 'ka' ? 'ყველა' : 'all');
+            
         downloadAllBtn.disabled = true;
-        downloadAllBtn.innerHTML = '<i data-lucide="loader-2" class="icon spin-icon"></i> მიმდინარეობს...';
+        downloadAllBtn.innerHTML = currentLang === 'ka' 
+            ? '<i data-lucide="loader-2" class="icon spin-icon"></i> მიმდინარეობს...' 
+            : '<i data-lucide="loader-2" class="icon spin-icon"></i> Processing...';
         refreshIcons();
-        showToast(`📦 ZIP იქმნება (${label})...`, 15000);
+        showToast(currentLang === 'ka' ? `📦 ZIP იქმნება (${label})...` : `📦 Creating ZIP (${label})...`, 15000);
 
         try {
             const zipName = pageTitle === 'images' ? 'images' : pageTitle;
@@ -1450,13 +1478,16 @@
 
             const content = await zip.generateAsync({ type: 'blob' });
             saveAs(content, `${zipName}.zip`);
-            showToast('✅ ZIP გადმოწერილია!');
+            showToast(currentLang === 'ka' ? '✅ ZIP გადმოწერილია!' : '✅ ZIP downloaded successfully!');
         } catch (e) {
             console.error(e);
-            showToast('❌ ფოტოების გადმოწერა ვერ მოხერხდა');
+            showToast(currentLang === 'ka' ? '❌ ფოტოების გადმოწერა ვერ მოხერხდა' : '❌ Failed to download images');
         } finally {
             downloadAllBtn.disabled = false;
-            downloadAllBtn.innerHTML = `<i data-lucide="download" class="icon"></i> <span id="downloadBtnLabel">${selectedUrls.size > 0 ? 'გადმოწერა (' + selectedUrls.size + ')' : 'ყველას გადმოწერა'}</span>`;
+            const btnLabel = selectedUrls.size > 0 
+                ? (currentLang === 'ka' ? 'გადმოწერა (' + selectedUrls.size + ')' : 'Download (' + selectedUrls.size + ')')
+                : (currentLang === 'ka' ? 'ყველას გადმოწერა' : 'Download All');
+            downloadAllBtn.innerHTML = `<i data-lucide="download" class="icon"></i> <span id="downloadBtnLabel">${btnLabel}</span>`;
             refreshIcons();
         }
     });
@@ -1470,7 +1501,7 @@
         const content = urls.join('\n');
         const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
         saveAs(blob, 'image-urls.txt');
-        showToast(`📋 ${urls.length} URL ექსპორტირებულია`);
+        showToast(currentLang === 'ka' ? `📋 ${urls.length} URL ექსპორტირებულია` : `📋 ${urls.length} URLs exported`);
     });
 
     // ══════════════════════════════════════════
@@ -1564,9 +1595,16 @@
             showResults(filtered);
 
             if (filtered.length > 0) {
-                const statusCount = `${filtered.length} სურათი`;
+                const statusCount = currentLang === 'ka' 
+                    ? `${filtered.length} სურათი` 
+                    : `${filtered.length} images`;
                 const presetText = currentDomainPreset ? ` • Preset: ${currentDomainPreset}` : '';
-                setStatus(`✅ ${statusCount} ნაპოვნია (${raw.length - filtered.length} პატარა გაფილტრულია)${presetText}`, 'success');
+                
+                const successMsg = currentLang === 'ka'
+                    ? `✅ ${statusCount} ნაპოვნია (${raw.length - filtered.length} პატარა გაფილტრულია)${presetText}`
+                    : `✅ ${statusCount} found (${raw.length - filtered.length} small filtered out)${presetText}`;
+                
+                setStatus(successMsg, 'success');
                 // Kick off file size + content-type fetching in background, then refresh filters
                 fetchFileSizes(filtered.slice(0, 80)).then(() => {
                     applyFiltersAndSort();
@@ -1574,7 +1612,10 @@
             }
         } catch (err) {
             initialState.classList.remove('hidden');
-            setStatus('❌ ' + (err.message || 'უცნობი შეცდომა'), 'error');
+            const errorMsg = currentLang === 'ka'
+                ? '❌ ' + (err.message || 'უცნობი შეცდომა')
+                : '❌ ' + (err.message || 'Unknown error');
+            setStatus(errorMsg, 'error');
         } finally {
             showLoading(false);
             scrapeBtn.disabled = false;
