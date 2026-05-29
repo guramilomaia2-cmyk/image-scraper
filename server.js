@@ -15,6 +15,36 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Silence favicon 404s
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
+function upscaleScene7Url(url) {
+  if (!url || typeof url !== 'string') return url;
+  if (url.includes('/is/image/') || url.includes('/is/content/') || url.includes('scene7.com') || url.includes('i.dell.com')) {
+    try {
+      const parsed = new URL(url);
+      const paramsToStrip = ['wid', 'hei', 'scl', 'size', 'pscan', 'fit'];
+      paramsToStrip.forEach(param => parsed.searchParams.delete(param));
+      
+      if (!parsed.searchParams.has('fmt')) {
+        parsed.searchParams.set('fmt', 'png-alpha');
+      }
+      parsed.searchParams.set('qlt', '100,1');
+      parsed.searchParams.set('resMode', 'sharp2');
+      
+      return parsed.toString();
+    } catch (e) {
+      let cleaned = url;
+      cleaned = cleaned.replace(/[?&](wid|hei|scl|size|pscan|fit)=[^&]*/g, '');
+      if (!cleaned.includes('fmt=')) {
+        cleaned += (cleaned.includes('?') ? '&' : '?') + 'fmt=png-alpha';
+      }
+      if (!cleaned.includes('qlt=')) {
+        cleaned += '&qlt=100,1';
+      }
+      return cleaned;
+    }
+  }
+  return url;
+}
+
 // Helper: resolve relative URLs to absolute
 function resolveUrl(base, relative) {
   if (!relative || typeof relative !== 'string') return null;
@@ -22,9 +52,9 @@ function resolveUrl(base, relative) {
   if (trimmed.startsWith('data:')) {
     return trimmed.startsWith('data:image/') ? trimmed : null;
   }
-  if (trimmed.startsWith('//')) return `https:${trimmed}`;
+  if (trimmed.startsWith('//')) return upscaleScene7Url(`https:${trimmed}`);
   try {
-    return new URL(trimmed, base).href;
+    return upscaleScene7Url(new URL(trimmed, base).href);
   } catch {
     return null;
   }

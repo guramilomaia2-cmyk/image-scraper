@@ -404,14 +404,14 @@
                 if (json.preset) currentDomainPreset = json.preset;
                 if (json.contents) {
                     return json.preset
-                        ? `<meta name="scraper-domain-preset" content="${escapeHtml(json.preset)}">\\n${json.contents}`
+                        ? `<meta name="scraper-domain-preset" content="${escapeHtml(json.preset)}">\n${json.contents}`
                         : json.contents;
                 }
                 if (json.images && Array.isArray(json.images)) {
                     let fakeHtml = '';
-                    if (json.preset) fakeHtml += `<meta name="scraper-domain-preset" content="${escapeHtml(json.preset)}">\\n`;
-                    if (json.title) fakeHtml += `<title>${escapeHtml(json.title)}</title>\\n`;
-                    fakeHtml += json.images.map(img => `<img src="${escapeHtml(img)}">`).join('\\n');
+                    if (json.preset) fakeHtml += `<meta name="scraper-domain-preset" content="${escapeHtml(json.preset)}">\n`;
+                    if (json.title) fakeHtml += `<title>${escapeHtml(json.title)}</title>\n`;
+                    fakeHtml += json.images.map(img => `<img src="${escapeHtml(img)}">`).join('\n');
                     return fakeHtml;
                 }
                 
@@ -442,13 +442,43 @@
     // ══════════════════════════════════════════
     //  URL helpers
     // ══════════════════════════════════════════
+    function upscaleScene7Url(url) {
+        if (!url || typeof url !== 'string') return url;
+        if (url.includes('/is/image/') || url.includes('/is/content/') || url.includes('scene7.com') || url.includes('i.dell.com')) {
+            try {
+                const parsed = new URL(url);
+                const paramsToStrip = ['wid', 'hei', 'scl', 'size', 'pscan', 'fit'];
+                paramsToStrip.forEach(param => parsed.searchParams.delete(param));
+                
+                if (!parsed.searchParams.has('fmt')) {
+                    parsed.searchParams.set('fmt', 'png-alpha');
+                }
+                parsed.searchParams.set('qlt', '100,1');
+                parsed.searchParams.set('resMode', 'sharp2');
+                
+                return parsed.toString();
+            } catch (e) {
+                let cleaned = url;
+                cleaned = cleaned.replace(/[?&](wid|hei|scl|size|pscan|fit)=[^&]*/g, '');
+                if (!cleaned.includes('fmt=')) {
+                    cleaned += (cleaned.includes('?') ? '&' : '?') + 'fmt=png-alpha';
+                }
+                if (!cleaned.includes('qlt=')) {
+                    cleaned += '&qlt=100,1';
+                }
+                return cleaned;
+            }
+        }
+        return url;
+    }
+
     function resolveUrl(base, relative) {
         if (!relative) return null;
         relative = relative.trim();
         if (/^[\[{]/.test(relative)) return null;
         if (relative.startsWith('data:')) return relative.startsWith('data:image/') ? relative : null;
-        if (relative.startsWith('//')) return `https:${relative}`;
-        try { return new URL(relative, base).href; } catch { return null; }
+        if (relative.startsWith('//')) return upscaleScene7Url(`https:${relative}`);
+        try { return upscaleScene7Url(new URL(relative, base).href); } catch { return null; }
     }
 
     function getExtension(url) {
@@ -514,6 +544,9 @@
         'category', 'page', 'home', 'men', 'women', 'kids'
     ]);
 
+    // ══════════════════════════════════════════
+    //  Product hints & extraction logic
+    // ══════════════════════════════════════════
     function normalizeHintTerm(value) {
         return safeDecodeLower(value)
             .replace(/&amp;/g, '&')
@@ -735,7 +768,7 @@
         // Sanitize for filename
         pageTitle = pageTitle.replace(/[\\\\/:*?"<>|]/g, '-').trim() || 'images';
         currentDomainPreset = doc.querySelector('meta[name="scraper-domain-preset"]')?.getAttribute('content')?.trim() || 
-                              detectDomainPresetFromPage(baseUrl, doc);
+                               detectDomainPresetFromPage(baseUrl, doc);
         currentProductHints = collectProductHints(baseUrl, doc);
 
         // ── Zoommer Specific extraction to get ONLY main gallery/preview images ──
@@ -940,8 +973,6 @@
         }
     }
 
-
-
     // ══════════════════════════════════════════
     //  Min-size filter (load image to check dimensions)
     // ══════════════════════════════════════════
@@ -1105,13 +1136,6 @@
       `;
 
             const img = card.querySelector('img');
-
-            // GIF: pause on load, play on hover
-            if (isGif) {
-                img.addEventListener('load', () => {
-                    // Store the gif src
-                });
-            }
 
             img.addEventListener('error', () => {
                 card.querySelector('.image-thumb-wrap').innerHTML = `
@@ -1316,6 +1340,9 @@
         }
     }
 
+    // ══════════════════════════════════════════
+    //  Event listeners & operations
+    // ══════════════════════════════════════════
     function closeLightbox() {
         lightbox.classList.add('hidden');
         lightboxImg.src = '';
@@ -1464,8 +1491,6 @@
             try {
                 const u = new URL(url);
                 // Key: hostname + pathname (ignore query params for base dedupe)
-                // Exception: if path ends with generic name like "image.jpg", maybe query is important?
-                // For now, let's treat query params as variants.
                 const key = (u.hostname + u.pathname).toLowerCase();
 
                 if (!unique.has(key)) {
@@ -1490,8 +1515,6 @@
                     if (scoreNew > scoreOld) {
                         unique.set(key, url);
                     } else if (scoreNew === scoreOld) {
-                        // If scores equal, prefer the one with *more* query params? Or *fewer*?
-                        // Often cleaner URL is better.
                         if (url.length < existing.length) unique.set(key, url);
                     }
                 }
