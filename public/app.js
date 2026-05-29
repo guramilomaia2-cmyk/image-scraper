@@ -630,6 +630,7 @@
         try { host = new URL(baseUrl).hostname.toLowerCase(); } catch { }
 
         if (host.includes('ray-ban.com')) return 'Ray-Ban';
+        if (host.includes('zoommer.ge')) return 'Zoommer';
         if (host.includes('belkin.') || html.includes('/dw/image/v2/belkin')) return 'Belkin / SFCC';
         if (html.includes('shopify.shop') || html.includes('cdn.shopify.com/s/files') || html.includes('shopifyanalytics') || /\/products?\//i.test(lowerUrl)) return 'Shopify';
         if (html.includes('/dw/image/v2/') || html.includes('/on/demandware.store/') || html.includes('demandware') || html.includes('product-catalog')) return 'Salesforce Commerce Cloud';
@@ -736,6 +737,29 @@
         currentDomainPreset = doc.querySelector('meta[name="scraper-domain-preset"]')?.getAttribute('content')?.trim() || 
                               detectDomainPresetFromPage(baseUrl, doc);
         currentProductHints = collectProductHints(baseUrl, doc);
+
+        // ── Zoommer Specific extraction to get ONLY main gallery/preview images ──
+        if (currentDomainPreset === 'Zoommer') {
+            const zoommerImages = new Set();
+            doc.querySelectorAll('.product-main-slider img, .product-preview-slide img, .product-second-slider img').forEach(el => {
+                let src = el.getAttribute('src') || el.getAttribute('data-src') || el.getAttribute('data-lazy-src');
+                if (src) {
+                    if (src.includes('/_next/image') && src.includes('url=')) {
+                        try {
+                            const parsed = new URL(src, baseUrl);
+                            const rawUrl = parsed.searchParams.get('url');
+                            if (rawUrl) src = rawUrl;
+                        } catch (e) {}
+                    }
+                    const resolved = resolveUrl(baseUrl, src);
+                    if (resolved) zoommerImages.add(resolved);
+                }
+            });
+
+            if (zoommerImages.size > 0) {
+                return [...zoommerImages];
+            }
+        }
 
         // Map: canonical URL → best srcset candidate width
         const urlMap = new Map();
