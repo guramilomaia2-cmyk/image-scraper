@@ -324,7 +324,7 @@ async function fetchWithPuppeteer(url, maxRetries = 3) {
       browser = await puppeteer.launch({
         headless: "new",
         args: args,
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN || undefined,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN || '/usr/bin/google-chrome-stable',
         ignoreHTTPSErrors: true
       });
 
