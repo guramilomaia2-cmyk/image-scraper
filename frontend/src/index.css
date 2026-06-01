@@ -3,45 +3,47 @@
 /* ── CSS Custom Properties (Theme Variables) ── */
 :root,
 [data-theme="light"] {
-  --bg: #f5f6f8;
-  --bg-2: #ffffff;
-  --surface: #ffffff;
-  --surface-hover: #f1f3f5;
-  --surface-solid: #ffffff;
-  --border: #e4e7ec;
-  --border-hover: #c9ced6;
-  --text: #16181d;
-  --text-muted: #667085;
-  --text-faint: #98a2b3;
-  --accent: #f58220;
-  --accent-2: #ffb000;
-  --accent-glow: rgba(245, 130, 32, 0.22);
-  --success: #13a538;
-  --success-glow: rgba(19, 165, 56, 0.18);
-  --error: #e03131;
-  --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 24px 70px rgba(15, 23, 42, 0.18);
+  --bg: #f5f5f7;
+  --bg-gradient: radial-gradient(circle at 15% 50%, rgba(255,149,0,0.15), transparent 25%), radial-gradient(circle at 85% 30%, rgba(255,59,48,0.1), transparent 25%), linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+  --text: #1d1d1f;
+  --text-muted: #86868b;
+  --text-faint: #a1a1a6;
+  
+  /* Apple Liquid Glass Light */
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-hover: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.04), inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  --glass-blur: blur(40px) saturate(180%);
+  
+  --accent: #ff9500;
+  --accent-2: #ff3b30;
+  --accent-glow: rgba(255, 149, 0, 0.25);
+  --success: #34c759;
+  --success-glow: rgba(52, 199, 89, 0.2);
+  --error: #ff3b30;
 }
 
 [data-theme="dark"] {
-  --bg: #0f1115;
-  --bg-2: #151820;
-  --surface: #171a21;
-  --surface-hover: #20242d;
-  --surface-solid: #171a21;
-  --border: #2a2f3a;
-  --border-hover: #3b4352;
-  --text: #f5f7fb;
-  --text-muted: #9aa4b2;
-  --text-faint: #667085;
-  --accent: #f58220;
-  --accent-2: #ffb000;
-  --accent-glow: rgba(245, 130, 32, 0.28);
-  --success: #22c55e;
-  --success-glow: rgba(34, 197, 94, 0.2);
-  --error: #ff5a5f;
-  --shadow: 0 16px 44px rgba(0, 0, 0, 0.32);
-  --shadow-lg: 0 26px 90px rgba(0, 0, 0, 0.5);
+  --bg: #000000;
+  --bg-gradient: radial-gradient(circle at 20% 40%, rgba(255,149,0,0.2), transparent 30%), radial-gradient(circle at 80% 60%, rgba(255,59,48,0.15), transparent 30%), radial-gradient(circle at 50% 90%, rgba(0,102,204,0.15), transparent 40%), #000000;
+  --text: #f5f5f7;
+  --text-muted: #86868b;
+  --text-faint: #6e6e73;
+  
+  /* Apple Liquid Glass Dark */
+  --glass-bg: rgba(30, 30, 30, 0.45);
+  --glass-hover: rgba(45, 45, 45, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(40px) saturate(180%);
+
+  --accent: #ff9f0a;
+  --accent-2: #ff453a;
+  --accent-glow: rgba(255, 159, 10, 0.25);
+  --success: #32d74b;
+  --success-glow: rgba(50, 215, 75, 0.2);
+  --error: #ff453a;
 }
 
 /* ── Base Styles ── */
@@ -58,14 +60,23 @@ html {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(180deg, rgba(245, 130, 32, 0.08) 0, transparent 210px), var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+  background: var(--bg-gradient);
+  background-attachment: fixed;
   color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
-  line-height: 1.6;
-  transition: background 0.3s ease, color 0.3s ease;
-  letter-spacing: 0;
+  line-height: 1.5;
+  transition: background 0.4s ease, color 0.4s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fix native select options in dark mode */
+option {
+  background-color: var(--bg-2);
+  color: var(--text);
+  font-weight: 500;
 }
 
 /* Hide datalist dropdown arrow in WebKit */

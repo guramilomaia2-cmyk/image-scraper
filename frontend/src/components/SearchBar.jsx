@@ -17,7 +17,7 @@ export function addToHistory(url) {
   localStorage.setItem('scraper-history', JSON.stringify(hist));
 }
 
-export default function SearchBar({ onScrape, isLoading }) {
+export default function SearchBar({ onScrape, isLoading, hasSearched }) {
   const { t } = useLanguage();
   const [url, setUrl] = useState('');
   const [history] = useState(getHistory);
@@ -27,7 +27,8 @@ export default function SearchBar({ onScrape, isLoading }) {
     inputRef.current?.focus();
   }, []);
 
-  const handleSubmit = () => {
+  const handleSubmit = (e) => {
+    if (e) e.preventDefault();
     const trimmed = url.trim();
     if (!trimmed) {
       inputRef.current?.focus();
@@ -52,37 +53,61 @@ export default function SearchBar({ onScrape, isLoading }) {
   };
 
   return (
-    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-3.5 mb-3 shadow-[var(--shadow)] border-l-4 border-l-[var(--accent)] transition-all duration-200 focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_4px_var(--accent-glow),var(--shadow)]">
-      <div className="flex items-center gap-2.5">
-        <Link2 className="w-[18px] h-[18px] shrink-0 text-[var(--accent)]" />
-        <input
-          ref={inputRef}
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onPaste={handlePaste}
-          placeholder="https://example.com"
-          autoComplete="off"
-          spellCheck="false"
-          list="urlHistory"
-          className="flex-1 bg-transparent border-none outline-none text-[var(--text)] font-[inherit] text-base min-w-0 min-h-[42px] px-1"
-        />
-        <datalist id="urlHistory">
-          {history.map((u) => (
-            <option key={u} value={u} />
-          ))}
-        </datalist>
+    <div 
+      className={`transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hasSearched ? 'mb-8' : 'mt-[15vh]'}`}
+      style={{ margin: hasSearched ? '0 auto 2rem' : '15vh auto 0', maxWidth: '768px', width: '100%' }}
+    >
+      <form 
+        onSubmit={handleSubmit}
+        style={{
+          background: 'var(--glass-bg)',
+          backdropFilter: 'var(--glass-blur)',
+          WebkitBackdropFilter: 'var(--glass-blur)',
+          border: '1px solid var(--glass-border)',
+          boxShadow: 'var(--glass-shadow)',
+          borderRadius: '32px',
+          padding: '4px'
+        }}
+        className="relative flex items-center group transition-all duration-500 hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] focus-within:!border-[var(--accent)] focus-within:!shadow-[0_8px_32px_var(--accent-glow)]"
+      >
+        <div className="relative flex-1 flex items-center h-[56px]">
+          <Link2 className="absolute left-5 w-5 h-5 text-[var(--text-faint)] group-focus-within:text-[var(--accent)] transition-colors duration-300 pointer-events-none" />
+          <input
+            ref={inputRef}
+            type="url"
+            placeholder={t('hint')}
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
+            disabled={isLoading}
+            className="w-full h-full bg-transparent border-none text-[1.1rem] text-[var(--text)] font-medium outline-none disabled:opacity-50 placeholder:text-[var(--text-faint)] placeholder:font-normal"
+            style={{ paddingLeft: '52px', paddingRight: '16px' }}
+            autoComplete="off"
+            spellCheck="false"
+            list="urlHistory"
+          />
+          <datalist id="urlHistory">
+            {history.map((h, i) => (
+              <option key={i} value={h} />
+            ))}
+          </datalist>
+        </div>
+        
         <button
-          onClick={handleSubmit}
-          disabled={isLoading}
-          className="inline-flex items-center gap-2 min-h-[44px] px-5 bg-[var(--accent)] border border-[var(--accent)] rounded-lg text-white font-semibold text-[0.95rem] cursor-pointer whitespace-nowrap shadow-[0_12px_20px_rgba(245,130,32,0.18)] transition-all duration-200 hover:bg-[#e87517] hover:border-[#e87517] hover:shadow-[0_14px_26px_rgba(245,130,32,0.24)] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          type="submit"
+          disabled={isLoading || !url.trim()}
+          className="flex items-center justify-center w-[52px] h-[52px] mr-1 rounded-[26px] text-white cursor-pointer transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)] disabled:opacity-0 disabled:-translate-x-4 disabled:pointer-events-none"
+          style={{ 
+            background: 'linear-gradient(135deg, var(--accent-2), var(--accent))',
+            boxShadow: '0 4px 16px var(--accent-glow), inset 0 2px 0 rgba(255,255,255,0.2)'
+          }}
+          onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 8px 24px var(--accent-glow), inset 0 2px 0 rgba(255,255,255,0.2)'; } }}
+          onMouseLeave={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 16px var(--accent-glow), inset 0 2px 0 rgba(255,255,255,0.2)'; } }}
         >
-          <SearchCheck className="w-[18px] h-[18px]" />
-          <span>{t('title')}</span>
+          {isLoading ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <SearchCheck className="w-[22px] h-[22px]" />}
         </button>
-      </div>
-      <div className="mt-2 ml-8 text-xs text-[var(--text-faint)]">{t('hint')}</div>
+      </form>
     </div>
   );
 }

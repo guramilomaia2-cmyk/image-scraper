@@ -77,37 +77,55 @@ export default function ImageCard({
 
   return (
     <div
-      className={`bg-[var(--surface)] border rounded-lg overflow-hidden cursor-pointer transition-all duration-200 animate-fade-in-up ${
-        isSelected
-          ? 'border-[var(--success)] shadow-[0_0_0_2px_var(--success-glow),0_8px_24px_rgba(0,0,0,0.2)]'
-          : 'border-[var(--border)] hover:border-[rgba(245,130,32,0.65)] hover:shadow-[0_16px_38px_rgba(15,23,42,0.13)] hover:-translate-y-[3px]'
-      }`}
-      style={{ animationDelay: `${Math.min(index * 20, 400)}ms` }}
+      className="group relative rounded-[24px] overflow-hidden cursor-pointer transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)]"
+      style={{ 
+        animationDelay: `${Math.min(index * 20, 400)}ms`,
+        background: 'var(--glass-bg)',
+        backdropFilter: 'var(--glass-blur)',
+        WebkitBackdropFilter: 'var(--glass-blur)',
+        border: isSelected ? '2px solid var(--accent)' : '1px solid var(--glass-border)',
+        boxShadow: isSelected ? '0 0 0 4px var(--accent-glow), 0 20px 40px rgba(0,0,0,0.15)' : 'var(--glass-shadow)',
+        transform: isSelected ? 'scale(0.97)' : 'none'
+      }}
+      onMouseEnter={(e) => { if (!isSelected) { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.borderColor = 'var(--accent)'; } }}
+      onMouseLeave={(e) => { if (!isSelected) { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'var(--glass-border)'; } }}
     >
       {/* Thumbnail */}
       <div
-        className="relative w-full pt-[72%] overflow-hidden bg-checkered dark:bg-checkered-dark"
+        className="relative w-full bg-checkered dark:bg-checkered-dark overflow-hidden"
+        style={{ paddingBottom: '85%' }}
         onClick={handleThumbClick}
       >
         {/* Selection check */}
         <div
-          className={`absolute top-2 left-2 w-[26px] h-[26px] bg-[var(--accent)] rounded-full flex items-center justify-center text-[0.85rem] text-white z-[3] pointer-events-none transition-all duration-150 ${
-            isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-[0.6]'
-          }`}
+          className="absolute top-4 left-4 w-8 h-8 rounded-full flex items-center justify-center text-[1rem] text-white z-10 pointer-events-none transition-all duration-300 shadow-lg"
+          style={{
+            background: isSelected ? 'var(--accent)' : 'rgba(0,0,0,0.2)',
+            backdropFilter: 'blur(10px)',
+            opacity: isSelected ? 1 : 0,
+            transform: isSelected ? 'scale(1)' : 'scale(0.5)'
+          }}
         >
           ✓
         </div>
+        
+        {/* Reveal check on hover if not selected */}
+        {!isSelected && (
+          <div className="absolute top-4 left-4 w-8 h-8 rounded-full flex items-center justify-center text-[1rem] text-white z-10 pointer-events-none transition-all duration-300 shadow-lg opacity-0 scale-50 group-hover:opacity-60 group-hover:scale-100 bg-[rgba(255,255,255,0.2)] border border-white/30 backdrop-blur-md">
+            ✓
+          </div>
+        )}
 
         {isGif && (
-          <span className="absolute top-2 right-2 bg-black/65 backdrop-blur-sm border border-white/15 rounded-md px-1.5 py-0.5 text-[0.7rem] font-bold text-pink-400 tracking-wide z-[3] pointer-events-none">
+          <span className="absolute top-4 right-4 bg-black/50 backdrop-blur-xl border border-white/20 rounded-[10px] px-2.5 py-1 text-[0.75rem] font-black text-[#ff375f] tracking-widest z-10 pointer-events-none shadow-xl">
             GIF
           </span>
         )}
 
         {broken ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-[var(--text-muted)] text-[0.78rem]">
-            <span className="text-3xl opacity-40">🚫</span>
-            <span>{t('broken')}</span>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-[var(--text-muted)]">
+            <span className="text-5xl opacity-20 filter grayscale">🚫</span>
+            <span className="text-[0.9rem] font-medium tracking-wide opacity-60">{t('broken')}</span>
           </div>
         ) : (
           <img
@@ -115,57 +133,57 @@ export default function ImageCard({
             alt={filename}
             loading="lazy"
             onError={() => setBroken(true)}
-            className="absolute inset-0 w-full h-full object-contain p-3 transition-transform duration-400 group-hover:scale-[1.06]"
+            className="absolute inset-0 w-full h-full object-contain p-5 transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.12]"
           />
         )}
 
         {/* Hover overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-200 flex items-end justify-center pb-3 gap-2">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400 flex items-end justify-center pb-5 gap-3 pointer-events-none">
           <button
             data-action="preview"
             onClick={handlePreview}
-            className="inline-flex items-center gap-1.5 px-3 py-1 bg-[rgba(22,24,29,0.82)] backdrop-blur-lg border border-white/20 rounded-lg text-white text-[0.78rem] font-medium cursor-pointer transition-colors duration-200 hover:bg-white/28"
+            className="pointer-events-auto inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-xl border border-white/30 rounded-[14px] text-white text-[0.9rem] font-bold cursor-pointer transition-all duration-300 hover:bg-white/30 hover:scale-105 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
           >
-            <ZoomIn className="w-[14px] h-[14px]" />
+            <ZoomIn className="w-4 h-4" />
             {t('zoom')}
           </button>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="px-2.5 py-2 flex items-center justify-between gap-1.5 min-h-[56px] border-t border-[var(--border)]">
-        <div className="flex-1 min-w-0 flex flex-col gap-px">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-[0.76rem] text-[var(--text)] font-semibold whitespace-nowrap overflow-hidden text-ellipsis" title={filename}>
+      <div className="p-4 flex items-center justify-between gap-3 border-t border-[var(--glass-border)]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+        <div className="flex-1 min-w-0 flex flex-col gap-1">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-[0.85rem] text-[var(--text)] font-bold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" title={filename}>
               {filename}
             </span>
             {ext && (
-              <span className="shrink-0 px-1.5 py-px rounded-[5px] text-[0.65rem] font-bold tracking-wide bg-[rgba(245,130,32,0.12)] text-[var(--accent)] border border-[rgba(245,130,32,0.28)] leading-[1.5]">
-                {ext.toUpperCase()}
+              <span className="shrink-0 px-2 py-0.5 rounded-[8px] text-[0.65rem] font-black tracking-widest bg-[var(--accent-glow)] text-[var(--accent)] border border-[var(--accent-glow)] uppercase">
+                {ext}
               </span>
             )}
           </div>
-          <span className="text-[0.7rem] text-[var(--text-faint)]">{sizeStr || ''}</span>
+          <span className="text-[0.8rem] text-[var(--text-faint)] font-medium tracking-wide">{sizeStr || ''}</span>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleCopy}
             title={t('copyUrl')}
-            className="w-7 h-7 flex items-center justify-center bg-[var(--surface-hover)] border border-[var(--border)] rounded-lg text-[var(--text)] text-[0.75rem] cursor-pointer transition-all duration-200 hover:text-[var(--accent)] hover:border-[rgba(245,130,32,0.45)] hover:-translate-y-px"
+            className="w-9 h-9 flex items-center justify-center bg-[rgba(0,0,0,0.04)] dark:bg-[rgba(255,255,255,0.06)] border border-[var(--glass-border)] rounded-[12px] text-[var(--text-muted)] cursor-pointer transition-all duration-300 hover:text-[var(--accent)] hover:border-[var(--accent)] hover:-translate-y-1 hover:shadow-[0_8px_16px_rgba(0,0,0,0.08)]"
           >
-            <Copy className="w-3.5 h-3.5" />
+            <Copy className="w-[18px] h-[18px]" />
           </button>
           <button
             onClick={handleDownload}
             disabled={downloading}
             title={t('download')}
-            className="w-7 h-7 flex items-center justify-center bg-[var(--surface-hover)] border border-[var(--border)] rounded-lg text-[var(--text)] text-[0.8rem] cursor-pointer transition-all duration-200 hover:text-[var(--accent)] hover:border-[rgba(245,130,32,0.45)] hover:-translate-y-px disabled:opacity-50"
+            className="w-9 h-9 flex items-center justify-center bg-[rgba(0,0,0,0.04)] dark:bg-[rgba(255,255,255,0.06)] border border-[var(--glass-border)] rounded-[12px] text-[var(--text-muted)] cursor-pointer transition-all duration-300 hover:text-[var(--accent)] hover:border-[var(--accent)] hover:-translate-y-1 hover:shadow-[0_8px_16px_rgba(0,0,0,0.08)] disabled:opacity-50 disabled:hover:transform-none"
           >
             {downloading ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <Loader2 className="w-[18px] h-[18px] animate-spin" />
             ) : (
-              <Download className="w-3.5 h-3.5" />
+              <Download className="w-[18px] h-[18px]" />
             )}
           </button>
         </div>

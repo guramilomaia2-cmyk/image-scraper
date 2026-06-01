@@ -5,12 +5,21 @@ export default function ControlsBar({ sortValue, onSortChange, minSize, onMinSiz
   const { t } = useLanguage();
 
   return (
-    <div className="flex items-start flex-wrap gap-3 mb-4 p-3 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-[var(--shadow)]">
-      <div className="flex items-center gap-2 flex-wrap shrink-0">
+    <div 
+      className="flex flex-wrap items-center justify-between gap-4 mb-6 p-4 rounded-[20px] transition-all duration-300"
+      style={{
+        background: 'var(--glass-bg)',
+        backdropFilter: 'var(--glass-blur)',
+        WebkitBackdropFilter: 'var(--glass-blur)',
+        border: '1px solid var(--glass-border)',
+        boxShadow: 'var(--glass-shadow)'
+      }}
+    >
+      <div className="flex flex-wrap items-center gap-4">
         <select
           value={sortValue}
           onChange={(e) => onSortChange(e.target.value)}
-          className="min-h-[36px] bg-[var(--surface-hover)] border border-[var(--border)] rounded-lg text-[var(--text)] font-[inherit] text-[0.85rem] py-1.5 px-2.5 cursor-pointer outline-none transition-colors duration-200 focus:border-[var(--accent)]"
+          className="h-[42px] bg-[rgba(0,0,0,0.03)] dark:bg-[rgba(255,255,255,0.05)] border border-[var(--glass-border)] rounded-[12px] text-[var(--text)] font-semibold text-[0.95rem] px-4 cursor-pointer outline-none transition-all duration-300 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.1)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-glow)]"
         >
           <option value="default">{t('sortDefault')}</option>
           <option value="name-asc">{t('sortNameAsc')}</option>
@@ -19,30 +28,34 @@ export default function ControlsBar({ sortValue, onSortChange, minSize, onMinSiz
           <option value="size-asc">{t('sortSizeAsc')}</option>
         </select>
 
-        <div className="flex items-center gap-1.5 text-[0.82rem] text-[var(--text-muted)]">
-          <label className="whitespace-nowrap">{t('minSize')}</label>
-          <input
-            type="number"
-            value={minSize}
-            onChange={(e) => onMinSizeChange(e.target.value)}
-            min="0"
-            max="9999"
-            className="w-[58px] min-h-[36px] bg-[var(--surface-hover)] border border-[var(--border)] rounded-lg text-[var(--text)] font-[inherit] text-[0.82rem] py-1 px-2 outline-none text-center transition-colors duration-200 focus:border-[var(--accent)]"
-          />
-          <span className="text-[var(--text-faint)] text-[0.78rem]">px</span>
-        </div>
+        <div className="h-6 w-px bg-[var(--border)] hidden sm:block opacity-50"></div>
 
-        <div className="flex items-center gap-2" title="Grid size">
-          <Grid3x3 className="w-[18px] h-[18px] text-[var(--accent)]" />
-          <input
-            type="range"
-            min="140"
-            max="400"
-            value={gridSize}
-            onChange={(e) => onGridSizeChange(parseInt(e.target.value))}
-            className="w-[90px] h-1 bg-[var(--border)] rounded-sm outline-none cursor-pointer accent-[var(--accent)]"
-          />
+        <div className="flex items-center gap-2 text-[0.95rem] text-[var(--text-muted)] font-semibold">
+          <label className="whitespace-nowrap">{t('minSize')}</label>
+          <div className="relative">
+            <input
+              type="number"
+              value={minSize}
+              onChange={(e) => onMinSizeChange(e.target.value)}
+              min="0"
+              max="9999"
+              className="w-[88px] h-[42px] bg-[rgba(0,0,0,0.03)] dark:bg-[rgba(255,255,255,0.05)] border border-[var(--glass-border)] rounded-[12px] text-[var(--text)] font-bold text-[0.95rem] pl-4 pr-8 outline-none transition-all duration-300 hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.1)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-glow)]"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)] text-[0.85rem] pointer-events-none font-medium">px</span>
+          </div>
         </div>
+      </div>
+
+      <div className="flex items-center gap-3 bg-[rgba(0,0,0,0.03)] dark:bg-[rgba(255,255,255,0.05)] px-5 h-[42px] rounded-[12px] border border-[var(--glass-border)]" title="Grid size">
+        <Grid3x3 className="w-5 h-5 text-[var(--text-faint)]" />
+        <input
+          type="range"
+          min="140"
+          max="400"
+          value={gridSize}
+          onChange={(e) => onGridSizeChange(parseInt(e.target.value))}
+          className="w-32 h-1.5 bg-[var(--border)] rounded-full outline-none cursor-pointer"
+        />
       </div>
     </div>
   );
