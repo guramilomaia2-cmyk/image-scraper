@@ -592,7 +592,7 @@ async function fetchHtmlContent(targetUrl) {
       if (isBlockedPage(html)) {
         throw new Error('Response was blocked by CAPTCHA/anti-bot protection');
       }
-      return html;
+      return { html, via: attempt.name };
     } catch (err) {
       errors.push(`${attempt.name} => ${err.message}`);
       console.log(`[Express] Attempt ${attempt.name} failed: ${err.message}`);
