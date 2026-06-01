@@ -10,6 +10,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install dependencies
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN npm install
 
 # Copy application code
