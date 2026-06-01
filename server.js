@@ -531,25 +531,21 @@ async function fetchRayBanImages(targetUrl) {
 
 
 async function fetchHtmlContent(targetUrl) {
-  const attempts = [];
-  const HEAVY_SITES = [
+  const isHeavy = [
     'apple.com', 'instagram.com', 'facebook.com', 'twitter.com', 'x.com',
     'linkedin.com', 'tiktok.com', 'pinterest.com', 'reddit.com', 'ray-ban.com',
     'nike.com', 'adidas.com'
-  ];
-  const isHeavy = HEAVY_SITES.some(d => targetUrl.toLowerCase().includes(d));
+  ].some(d => targetUrl.toLowerCase().includes(d));
+
+  let methods = [];
 
   if (isHeavy) {
-    // For heavy/protected sites, skip non-JS rendering and try Puppeteer JS rendering immediately
-    attempts.push({
-      name: 'Puppeteer (Local Headless JS)',
-      fn: async () => {
-        return await fetchWithPuppeteer(targetUrl);
-      }
+    methods.push({
+      name: 'Puppeteer',
+      fn: async () => await fetchWithPuppeteer(targetUrl)
     });
   } else {
-    // Try Direct
-    attempts.push({
+    methods.push({
       name: 'Direct',
       fn: async () => {
         const res = await axios.get(targetUrl, {
@@ -566,53 +562,44 @@ async function fetchHtmlContent(targetUrl) {
         return res.data;
       }
     });
-
-    attempts.push({
-      name: 'Puppeteer (Fallback Local Headless JS)',
-      fn: async () => {
-        return await fetchWithPuppeteer(targetUrl);
-      }
+    methods.push({
+      name: 'Puppeteer',
+      fn: async () => await fetchWithPuppeteer(targetUrl)
     });
   }
 
-  // Fallbacks
-  attempts.push(
-    {
-      name: 'allorigins',
-      fn: async () => {
-        const res = await axios.get(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, { timeout: 10000 });
-        return res.data.contents || res.data;
-      }
-    },
-    {
-      name: 'corsproxy',
-      fn: async () => {
-        const res = await axios.get(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, { timeout: 8000 });
-        return res.data;
-      }
+  methods.push({
+    name: 'allorigins',
+    fn: async () => {
+      const res = await axios.get(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, { timeout: 15000 });
+      return res.data;
     }
-  );
+  });
 
-  let lastError = 'Unknown error';
-  for (const attempt of attempts) {
+  methods.push({
+    name: 'corsproxy',
+    fn: async () => {
+      const res = await axios.get(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, { timeout: 8000 });
+      return res.data;
+    }
+  });
+
+  let errors = [];
+  for (const attempt of methods) {
     try {
-      console.log(`[Express] Trying ${attempt.name} for ${targetUrl}...`);
+      console.log(`[Express] Trying method: ${attempt.name}`);
       const html = await attempt.fn();
-      if (html && html.length > 80) {
-        if (isBlockedPage(html)) {
-          throw new Error('Response was blocked by CAPTCHA/anti-bot protection');
-        }
-        console.log(`[Express] Successful fetch via ${attempt.name}`);
-        return { html, via: attempt.name };
+      if (isBlockedPage(html)) {
+        throw new Error('Response was blocked by CAPTCHA/anti-bot protection');
       }
-      throw new Error('Response empty or too short');
+      return html;
     } catch (err) {
-      lastError = `${attempt.name}: ${err.message}`;
+      errors.push(`${attempt.name} => ${err.message}`);
       console.log(`[Express] Attempt ${attempt.name} failed: ${err.message}`);
     }
   }
 
-  throw new Error(`All scraping methods failed. Last error: ${lastError}`);
+  throw new Error(`All scraping methods failed. Errors: ${errors.join(' | ')}`);
 }
 
 app.get('/api/limits', async (req, res) => {
