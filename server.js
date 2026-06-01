@@ -635,12 +635,20 @@ app.post(['/scrape', '/api/scrape', '/api/extract'], async (req, res) => {
     }
   }
 
+  let html = '';
+  let via = '';
+  let preset = { id: 'generic', label: 'Generic' };
+  const baseUrl = url;
+  const imageSet = new Set();
+  let title = 'images';
+  let $ = null;
+
   try {
-    const { html, via } = await fetchHtmlContent(url);
-    const $ = cheerio.load(html);
-    const baseUrl = url;
-    const imageSet = new Set();
-    const preset = detectDomainPreset(url, html, $);
+    const result = await fetchHtmlContent(url);
+    html = result.html;
+    via = result.via;
+    $ = cheerio.load(html);
+    preset = detectDomainPreset(url, html, $);
 
     // 1. <img> and common lazy-load/data attributes
     $('img').each((_, el) => {
@@ -740,6 +748,28 @@ app.post(['/scrape', '/api/scrape', '/api/extract'], async (req, res) => {
     });
   } catch (err) {
     console.error('Scrape error:', err.message);
+
+    // Cloudflare Bypass: If HTML failed but it's a Shopify product, try hitting the JSON endpoint directly
+    if (url.includes('/products/')) {
+      console.log('[Fallback] HTML failed, but URL looks like Shopify. Trying product JSON API directly...');
+      try {
+        await fetchShopifyProductImages(url, imageSet);
+        if (imageSet.size > 0) {
+          const images = [...imageSet];
+          console.log(`[Fallback] Success! Found ${images.length} images via Shopify JSON API.`);
+          return res.json({
+            url,
+            count: images.length,
+            images,
+            title: 'Shopify Product (Fallback)',
+            via: 'Shopify API Bypass',
+            preset: 'Shopify'
+          });
+        }
+      } catch (fallbackErr) {
+        console.error('Shopify fallback also failed:', fallbackErr.message);
+      }
+    }
 
     if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED') {
       return res.status(400).json({ error: 'Could not reach the website. Check the URL and try again.' });
