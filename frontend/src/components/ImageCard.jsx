@@ -92,7 +92,7 @@ export default function ImageCard({
     >
       {/* Thumbnail */}
       <div
-        className="relative w-full bg-checkered dark:bg-checkered-dark overflow-hidden"
+        className="relative w-full overflow-hidden"
         style={{ paddingBottom: '85%' }}
         onClick={handleThumbClick}
       >

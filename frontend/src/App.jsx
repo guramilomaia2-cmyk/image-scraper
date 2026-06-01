@@ -346,7 +346,7 @@ export default function App() {
       {/* Status */}
       {status && (
         <div
-          className={`flex items-center gap-3 px-6 py-4 rounded-[20px] text-[0.95rem] font-bold mb-6 mx-auto w-max max-w-full transition-all duration-500 animate-in fade-in slide-in-from-top-4 ${
+          className={`flex items-center gap-3 px-6 py-4 text-[0.95rem] font-bold mb-6 mx-6 sm:mx-auto w-max max-w-[calc(100%-48px)] sm:max-w-full transition-all duration-500 animate-in fade-in slide-in-from-top-4 ${
             status.type === 'error'
               ? 'text-[var(--error)]'
               : 'text-[var(--success)]'
@@ -356,7 +356,8 @@ export default function App() {
             backdropFilter: 'var(--glass-blur)',
             WebkitBackdropFilter: 'var(--glass-blur)',
             border: status.type === 'error' ? '1px solid rgba(255,59,48,0.3)' : '1px solid rgba(52,199,89,0.3)',
-            boxShadow: status.type === 'error' ? '0 8px 32px rgba(255,59,48,0.15)' : '0 8px 32px rgba(52,199,89,0.15)'
+            boxShadow: status.type === 'error' ? '0 8px 32px rgba(255,59,48,0.15)' : '0 8px 32px rgba(52,199,89,0.15)',
+            borderRadius: '28px'
           }}
         >
           {status.type === 'success' ? <span className="text-xl">✨</span> : <span className="text-xl">⚠️</span>}
@@ -372,30 +373,29 @@ export default function App() {
         </div>
       )}
 
-      {/* Controls */}
+      {/* Sticky Controls Wrapper */}
       {showControls && !isLoading && (
-        <ControlsBar
-          sortValue={sortValue}
-          onSortChange={handleSortChange}
-          minSize={minSize}
-          onMinSizeChange={handleMinSizeChange}
-          gridSize={gridSize}
-          onGridSizeChange={setGridSize}
-        />
-      )}
+        <div className="sticky z-40 transition-all duration-300" style={{ top: '177px' }}>
+          <ControlsBar
+            sortValue={sortValue}
+            onSortChange={handleSortChange}
+            minSize={minSize}
+            onMinSizeChange={handleMinSizeChange}
+            gridSize={gridSize}
+            onGridSizeChange={setGridSize}
+          />
 
-      {/* Results Header */}
-      {showControls && !isLoading && (
-        <ResultsHeader
-          totalCount={allImages.length}
-          filteredCount={displayImages.length}
-          selectedCount={selectedUrls.size}
-          onDownloadAll={handleDownloadAll}
-          onExportUrls={handleExportUrls}
-          onDeselectAll={handleDeselectAll}
-          onClear={handleClear}
-          isDownloading={isDownloading}
-        />
+          <ResultsHeader
+            totalCount={allImages.length}
+            filteredCount={displayImages.length}
+            selectedCount={selectedUrls.size}
+            onDownloadAll={handleDownloadAll}
+            onExportUrls={handleExportUrls}
+            onDeselectAll={handleDeselectAll}
+            onClear={handleClear}
+            isDownloading={isDownloading}
+          />
+        </div>
       )}
 
       {/* Image Grid */}
@@ -436,13 +436,42 @@ export default function App() {
 
       {/* Initial State */}
       {showInitial && (
-        <div className="text-center py-32 px-6 text-[var(--text)] transition-all duration-700 animate-in fade-in zoom-in-95"
-             style={{ margin: '5vh auto 0', maxWidth: '768px', width: '100%', borderRadius: '32px', background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: '1px solid var(--glass-border)', boxShadow: 'var(--glass-shadow)' }}>
-          <div className="text-[5rem] mb-8 block drop-shadow-2xl hover:scale-110 hover:-rotate-3 transition-transform duration-500">
-            <ScanSearch className="w-16 h-16 mx-auto text-[var(--accent)] drop-shadow-[0_10px_25px_var(--accent-glow)]" />
+        <div className="text-center py-16 px-6 text-[var(--text)] transition-all duration-700 animate-in fade-in zoom-in-95 flex flex-col items-center justify-center"
+             style={{ margin: '5vh auto 0', maxWidth: '800px', width: '100%', borderRadius: '32px', background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: '1px solid var(--glass-border)', boxShadow: 'var(--glass-shadow)' }}>
+          <h2 className="text-[2rem] font-bold mb-4 tracking-tight text-center w-full">{t('appTitle')}</h2>
+          <p className="text-[1.1rem] opacity-70 font-medium max-w-2xl text-center leading-relaxed mb-10">
+            {t('aboutText')}
+          </p>
+          
+          <div className="text-center bg-[rgba(0,0,0,0.02)] dark:bg-[rgba(255,255,255,0.02)] rounded-3xl p-8 md:p-10 max-w-3xl w-full border border-[var(--glass-border)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+            <h3 className="text-[1.3rem] font-bold mb-10 text-[var(--accent)] flex items-center justify-center gap-3">
+              <ScanSearch className="w-6 h-6" />
+              {t('instructionsTitle')}
+            </h3>
+            <ul className="grid grid-cols-1 md:grid-cols-3 gap-8 text-[0.95rem] opacity-90 font-medium">
+              <li className="flex flex-col items-center text-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center flex-shrink-0 font-bold text-xl shadow-sm">1</div>
+                <div>
+                  <h4 className="font-bold text-[1.1rem] mb-2">{t('instruction1Title')}</h4>
+                  <p className="opacity-80 leading-relaxed">{t('instruction1Desc')}</p>
+                </div>
+              </li>
+              <li className="flex flex-col items-center text-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center flex-shrink-0 font-bold text-xl shadow-sm">2</div>
+                <div>
+                  <h4 className="font-bold text-[1.1rem] mb-2">{t('instruction2Title')}</h4>
+                  <p className="opacity-80 leading-relaxed">{t('instruction2Desc')}</p>
+                </div>
+              </li>
+              <li className="flex flex-col items-center text-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center flex-shrink-0 font-bold text-xl shadow-sm">3</div>
+                <div>
+                  <h4 className="font-bold text-[1.1rem] mb-2">{t('instruction3Title')}</h4>
+                  <p className="opacity-80 leading-relaxed">{t('instruction3Desc')}</p>
+                </div>
+              </li>
+            </ul>
           </div>
-          <h2 className="text-[1.8rem] font-bold mb-4 tracking-tight">{t('initialTitle') || 'Ready to Extract?'}</h2>
-          <p className="text-[1.1rem] opacity-70 font-medium max-w-md mx-auto leading-relaxed">{t('initialText')}</p>
         </div>
       )}
 

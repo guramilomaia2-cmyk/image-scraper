@@ -54,8 +54,15 @@ export default function SearchBar({ onScrape, isLoading, hasSearched }) {
 
   return (
     <div 
-      className={`transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hasSearched ? 'mb-8' : 'mt-[15vh]'}`}
-      style={{ margin: hasSearched ? '0 auto 2rem' : '15vh auto 0', maxWidth: '768px', width: '100%' }}
+      className={`transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hasSearched ? 'mb-8 sticky z-45' : 'mt-[15vh]'}`}
+      style={{ 
+        margin: hasSearched ? '0 auto 2rem' : '15vh auto 0', 
+        maxWidth: '768px', 
+        width: '100%', 
+        top: hasSearched ? '105px' : 'auto',
+        position: hasSearched ? 'sticky' : 'relative',
+        zIndex: 45
+      }}
     >
       <form 
         onSubmit={handleSubmit}

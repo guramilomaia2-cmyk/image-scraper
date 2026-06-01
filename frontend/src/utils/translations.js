@@ -1,7 +1,7 @@
 export const TRANSLATIONS = {
   ka: {
     title: "სურათების ძებნა",
-    appTitle: "Product Image Extractor",
+    appTitle: "PixExtract",
     hint: "მაგ: https://unsplash.com, https://wikipedia.org",
     loading: "სურათების ძებნა...",
     sortDefault: "სორტ: ნაგულისხმევი",
@@ -43,10 +43,18 @@ export const TRANSLATIONS = {
       const presetText = preset ? ` • Preset: ${preset}` : '';
       return `✅ ${count} სურათი ნაპოვნია (${filtered} პატარა გაფილტრულია)${presetText}`;
     },
+    aboutText: "ეს არის ინსტრუმენტი ნებისმიერი საჯარო ვებსაიტიდან სურათების ამოსაღებად, სანახავად და ჩამოსატვირთად.",
+    instructionsTitle: "როგორ გამოვიყენოთ ვებ-ინსტრუმენტი:",
+    instruction1Title: "შეიყვანეთ ბმული (URL)",
+    instruction1Desc: "შედით ვებსაიტზე და მთავარ ველში ჩასვით იმ გვერდის ბმული, საიდანაც სურათების ამოღება გსურთ (დარწმუნდით, რომ ბმული შეიცავს https://-ს).",
+    instruction2Title: "ამოღება (Extract)",
+    instruction2Desc: "დააჭირეთ ძებნის ღილაკს (ან Enter-ს). ინსტრუმენტი დაამუშავებს მოთხოვნას და მოძებნის ყველა არსებულ სურათს.",
+    instruction3Title: "ნახვა და ჩამოტვირთვა",
+    instruction3Desc: "პროცესის დასრულების შემდეგ, თქვენ შეძლებთ სურათების გაფილტვრას, ცალკეულად ან ZIP არქივის სახით ერთიანად გადმოწერას.",
   },
   en: {
     title: "Search Images",
-    appTitle: "Product Image Extractor",
+    appTitle: "PixExtract",
     hint: "e.g., https://unsplash.com, https://wikipedia.org",
     loading: "Searching images...",
     sortDefault: "Sort: Default",
@@ -88,5 +96,13 @@ export const TRANSLATIONS = {
       const presetText = preset ? ` • Preset: ${preset}` : '';
       return `✅ ${count} images found (${filtered} small filtered out)${presetText}`;
     },
+    aboutText: "It is a tool to extract, view and download images from any public website.",
+    instructionsTitle: "How to use the web tool:",
+    instruction1Title: "Enter the URL",
+    instruction1Desc: "Navigate to the website and paste the URL of the webpage you want to extract images from into the input field (ensure it includes https://).",
+    instruction2Title: "Extract",
+    instruction2Desc: "Click the search button (or press Enter). The tool will process the request and locate all available images.",
+    instruction3Title: "View and Download",
+    instruction3Desc: "Once the process is complete, you will be able to filter images, download them individually or all at once as a ZIP archive.",
   },
 };
