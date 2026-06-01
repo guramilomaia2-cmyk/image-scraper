@@ -7,6 +7,7 @@ const https = require('https');
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
+const { getRandomProxy } = require('./proxyManager');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -301,34 +302,67 @@ function imagePriority(url, targetUrl) {
   return score;
 }
 
-async function fetchWithPuppeteer(url) {
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-  });
-  try {
-    const page = await browser.newPage();
-    await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
-    if (url.includes('zoommer.ge')) {
-      const urlObj = new URL(url);
-      await page.setCookie({ name: 'Language', value: 'en', domain: urlObj.hostname });
-    }
-    await page.setUserAgent(randomUA());
-    await page.setRequestInterception(true);
-    page.on('request', req => {
-      const rt = req.resourceType();
-      if (['image', 'stylesheet', 'font', 'media'].includes(rt)) {
-        req.abort();
+async function fetchWithPuppeteer(url, maxRetries = 3) {
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    let browser = null;
+    try {
+      const proxyServer = await getRandomProxy();
+      const args = ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'];
+      
+      if (proxyServer) {
+        console.log(`[Puppeteer] Attempt ${attempt}: Using proxy ${proxyServer}`);
+        args.push(`--proxy-server=${proxyServer}`);
       } else {
-        req.continue();
+        console.log(`[Puppeteer] Attempt ${attempt}: No proxy available, using direct connection`);
       }
-    });
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 45000 });
-    const html = await page.content();
-    return html;
-  } finally {
-    await browser.close();
+
+      browser = await puppeteer.launch({
+        headless: "new",
+        args: args
+      });
+
+      const page = await browser.newPage();
+      await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
+      
+      if (url.includes('zoommer.ge')) {
+        const urlObj = new URL(url);
+        await page.setCookie({ name: 'Language', value: 'en', domain: urlObj.hostname });
+      }
+      
+      await page.setUserAgent(randomUA());
+      await page.setRequestInterception(true);
+      page.on('request', req => {
+        const rt = req.resourceType();
+        if (['image', 'stylesheet', 'font', 'media'].includes(rt)) {
+          req.abort();
+        } else {
+          req.continue();
+        }
+      });
+      
+      // Free proxies can be very slow, so increase timeout
+      await page.goto(url, { waitUntil: 'networkidle2', timeout: 35000 });
+      const html = await page.content();
+      
+      // Basic check if we got blocked even with proxy
+      if (isBlockedPage(html)) {
+        throw new Error('Blocked by target site with this proxy');
+      }
+      
+      return html;
+    } catch (err) {
+      lastError = err.message;
+      console.log(`[Puppeteer] Attempt ${attempt} failed: ${err.message}`);
+    } finally {
+      if (browser) {
+        await browser.close().catch(e => console.log('Error closing browser:', e.message));
+      }
+    }
   }
+
+  throw new Error(`All ${maxRetries} Puppeteer attempts failed. Last error: ${lastError}`);
 }
 
 // Realistic desktop User-Agents
