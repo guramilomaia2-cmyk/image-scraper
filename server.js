@@ -4,6 +4,10 @@ const cheerio = require('cheerio');
 const cors = require('cors');
 const path = require('path');
 const https = require('https');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin());
+const chromium = require('@sparticuz/chromium');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -298,7 +302,117 @@ function imagePriority(url, targetUrl) {
   return score;
 }
 
-const SCRAPER_API_KEY = process.env.SCRAPER_API_KEY || '';
+async function fetchWithPuppeteer(url) {
+  const executablePath = await chromium.executablePath();
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: executablePath || process.env.CHROME_BIN,
+    headless: chromium.headless,
+    ignoreHTTPSErrors: true,
+  });
+  try {
+    const page = await browser.newPage();
+    await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
+    if (url.includes('zoommer.ge')) {
+      const urlObj = new URL(url);
+      await page.setCookie({ name: 'Language', value: 'en', domain: urlObj.hostname });
+    }
+    await page.setUserAgent(randomUA());
+    await page.setRequestInterception(true);
+    page.on('request', req => {
+      const rt = req.resourceType();
+      if (['image', 'stylesheet', 'font', 'media'].includes(rt)) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 45000 });
+    const html = await page.content();
+    return html;
+  } finally {
+    await browser.close();
+  }
+}
+
+// Realistic desktop User-Agents
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0',
+];
+
+function randomUA() {
+  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+}
+
+function getCountryCodeForUrl(url) {
+  const lower = url.toLowerCase();
+  if (lower.includes('/australia/') || lower.includes('/au/') || lower.includes('.com.au') || lower.includes('.au/')) {
+    return 'au';
+  }
+  if (lower.includes('/canada/') || lower.includes('/ca/') || lower.includes('.ca/')) {
+    return 'ca';
+  }
+  if (lower.includes('/uk/') || lower.includes('/gb/') || lower.includes('.co.uk') || lower.includes('.uk/')) {
+    return 'gb';
+  }
+  if (lower.includes('/germany/') || lower.includes('/de/') || lower.includes('.de/')) {
+    return 'de';
+  }
+  if (lower.includes('/italy/') || lower.includes('/it/') || lower.includes('.it/')) {
+    return 'it';
+  }
+  if (lower.includes('/france/') || lower.includes('/fr/') || lower.includes('.fr/')) {
+    return 'fr';
+  }
+  if (lower.includes('/spain/') || lower.includes('/es/') || lower.includes('.es/')) {
+    return 'es';
+  }
+  return 'us';
+}
+
+function isBlockedPage(html) {
+  if (!html) return true;
+  const lower = typeof html === 'string' ? html.toLowerCase() : JSON.stringify(html).toLowerCase();
+  
+  const blockPatterns = [
+    'access denied',
+    'attention required',
+    'cf-challenge',
+    'turnstile',
+    'px-captcha',
+    'perimeterx',
+    'recaptcha',
+    'hcaptcha',
+    'captcha',
+    'security check',
+    'human verification',
+    'unusual traffic',
+    'block page',
+    'sucuri',
+    'distil networks',
+    'please enable cookies',
+    'security check to access',
+    'allow cookies',
+    'just a moment...'
+  ];
+  
+  const isPatternMatch = blockPatterns.some(p => lower.includes(p));
+  if (isPatternMatch) return true;
+  if (!lower.includes('<body') && !lower.includes('<html')) return true;
+  return false;
+}
+
+// Ray-Ban specific: use WCS REST API to get all product images
+// This bypasses JS rendering entirely by using the internal product catalog API
+async function fetchRayBanImages(targetUrl) {
+  const country = getCountryCodeForUrl(targetUrl);
+  const rbHeaders = {
+    'User-Agent': randomUA(),
+    'Accept': 'application/json, text/html, */*; q=0.01',
+}
 
 // Realistic desktop User-Agents
 const USER_AGENTS = [
@@ -382,13 +496,11 @@ async function fetchRayBanImages(targetUrl) {
   };
 
   // Step 1: fetch static HTML to extract catEntryId and storeId
-  // Ray-Ban uses Akamai which blocks direct access - go straight to ScraperAPI
-  console.log('[RayBan] Fetching static HTML via ScraperAPI...');
+  // Ray-Ban uses Akamai which blocks direct access - go straight to Puppeteer
+  console.log('[RayBan] Fetching static HTML via Puppeteer...');
   let staticHtml;
   try {
-    const staticApiUrl = `https://api.scraperapi.com?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(targetUrl)}&country_code=${country}&device_type=desktop`;
-    const staticRes = await axios.get(staticApiUrl, { timeout: 50000 });
-    staticHtml = staticRes.data;
+    staticHtml = await fetchWithPuppeteer(targetUrl);
     console.log('[RayBan] Static HTML fetched, length:', staticHtml.length);
   } catch (e) {
     throw new Error('Could not fetch Ray-Ban page: ' + e.message);
@@ -407,7 +519,7 @@ async function fetchRayBanImages(targetUrl) {
   console.log(`[RayBan] Found catEntryId=${catEntryId}, storeId=${storeId}`);
 
   // Step 2: call WCS REST API to get all product attachments
-  // Try directly first (works with Referer header), fall back to ScraperAPI
+  // Try directly first (works with Referer header), fall back to Puppeteer
   const wcsUrl = `https://www.ray-ban.com/wcs/resources/store/${storeId}/productview/byId/${catEntryId}?currency=AUD&langId=${langId}`;
   console.log('[RayBan] Fetching WCS product API:', wcsUrl);
 
@@ -417,11 +529,12 @@ async function fetchRayBanImages(targetUrl) {
     wcsData = wcsRes.data;
     console.log('[RayBan] WCS API fetched directly');
   } catch (e) {
-    console.log('[RayBan] Direct WCS fetch failed, trying ScraperAPI:', e.message);
-    const wcsApiUrl = `https://api.scraperapi.com?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(wcsUrl)}&country_code=${country}`;
-    const wcsRes = await axios.get(wcsApiUrl, { timeout: 20000 });
-    wcsData = wcsRes.data;
-    console.log('[RayBan] WCS API fetched via ScraperAPI');
+    console.log('[RayBan] Direct WCS fetch failed, trying Puppeteer:', e.message);
+    const rawHtml = await fetchWithPuppeteer(wcsUrl);
+    const cheerio = require('cheerio');
+    const $$ = cheerio.load(rawHtml);
+    wcsData = JSON.parse($$('body').text());
+    console.log('[RayBan] WCS API fetched via Puppeteer');
   }
 
   if (!wcsData || !wcsData.CatalogEntryView || wcsData.CatalogEntryView.length === 0) {
@@ -466,22 +579,13 @@ async function fetchHtmlContent(targetUrl) {
     'nike.com', 'adidas.com'
   ];
   const isHeavy = HEAVY_SITES.some(d => targetUrl.toLowerCase().includes(d));
-  const country = getCountryCodeForUrl(targetUrl);
 
-  if (isHeavy && SCRAPER_API_KEY) {
-    // For heavy/protected sites, skip non-JS rendering and try Premium JS rendering immediately (which is highly reliable for bypassing anti-bot)
+  if (isHeavy) {
+    // For heavy/protected sites, skip non-JS rendering and try Puppeteer JS rendering immediately
     attempts.push({
-      name: 'ScraperAPI (Premium JS)',
+      name: 'Puppeteer (Local Headless JS)',
       fn: async () => {
-        const res = await axios.get(`https://api.scraperapi.com?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(targetUrl)}&render=true&premium=true&country_code=${country}&device_type=desktop`, { timeout: 60000 });
-        return res.data;
-      }
-    });
-    attempts.push({
-      name: 'ScraperAPI (JS render)',
-      fn: async () => {
-        const res = await axios.get(`https://api.scraperapi.com?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(targetUrl)}&render=true&country_code=${country}&device_type=desktop`, { timeout: 45000 });
-        return res.data;
+        return await fetchWithPuppeteer(targetUrl);
       }
     });
   } else {
@@ -504,29 +608,12 @@ async function fetchHtmlContent(targetUrl) {
       }
     });
 
-    if (SCRAPER_API_KEY) {
-      attempts.push({
-        name: 'ScraperAPI (Fast)',
-        fn: async () => {
-          const res = await axios.get(`https://api.scraperapi.com?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(targetUrl)}&render=false&country_code=${country}&device_type=desktop`, { timeout: 15000 });
-          return res.data;
-        }
-      });
-      attempts.push({
-        name: 'ScraperAPI (JS render)',
-        fn: async () => {
-          const res = await axios.get(`https://api.scraperapi.com?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(targetUrl)}&render=true&country_code=${country}&device_type=desktop`, { timeout: 35000 });
-          return res.data;
-        }
-      });
-      attempts.push({
-        name: 'ScraperAPI (Premium JS)',
-        fn: async () => {
-          const res = await axios.get(`https://api.scraperapi.com?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(targetUrl)}&render=true&premium=true&country_code=${country}&device_type=desktop`, { timeout: 50000 });
-          return res.data;
-        }
-      });
-    }
+    attempts.push({
+      name: 'Puppeteer (Fallback Local Headless JS)',
+      fn: async () => {
+        return await fetchWithPuppeteer(targetUrl);
+      }
+    });
   }
 
   // Fallbacks
@@ -570,16 +657,10 @@ async function fetchHtmlContent(targetUrl) {
 }
 
 app.get('/api/limits', async (req, res) => {
-  try {
-    const response = await axios.get(`https://api.scraperapi.com/account?api_key=${SCRAPER_API_KEY}`, { timeout: 5000 });
-    return res.json({
-      creditsLeft: response.data.creditsLeft,
-      requestLimit: response.data.requestLimit
-    });
-  } catch (err) {
-    console.error('Failed to fetch ScraperAPI limits:', err.message);
-    return res.status(500).json({ error: 'Failed to fetch ScraperAPI limits' });
-  }
+  return res.json({
+    creditsLeft: 'Unlimited (Puppeteer Local)',
+    requestLimit: 'Unlimited'
+  });
 });
 
 app.post(['/scrape', '/api/scrape', '/api/extract'], async (req, res) => {
@@ -595,7 +676,7 @@ app.post(['/scrape', '/api/scrape', '/api/extract'], async (req, res) => {
   }
 
   // Ray-Ban specific: use WCS REST API for faster, more complete image extraction
-  if (url.toLowerCase().includes('ray-ban.com') && SCRAPER_API_KEY) {
+  if (url.toLowerCase().includes('ray-ban.com')) {
     try {
       console.log('[RayBan] Detected Ray-Ban URL, using WCS API strategy...');
       const { images, via, title } = await fetchRayBanImages(url);
