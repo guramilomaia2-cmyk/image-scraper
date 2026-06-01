@@ -375,7 +375,7 @@
         if (location.protocol === 'file:') {
             endpoints.push('http://127.0.0.1:3000/api/scrape', 'http://localhost:3000/api/scrape', 'http://localhost:3000/scrape');
         } else {
-            endpoints.push('/api/scrape', '/api/extract', '/.netlify/functions/scrape', '/scrape');
+            endpoints.push('/.netlify/functions/api/scrape', '/.netlify/functions/api', '/api/scrape');
         }
 
         if (true) {
@@ -1222,7 +1222,7 @@
 
     function getProxiedUrl(imgUrl) {
         if (location.protocol === 'file:') return `https://corsproxy.io/?${encodeURIComponent(imgUrl)}`;
-        if (location.hostname.includes('netlify.app')) return `/.netlify/functions/proxy?url=${encodeURIComponent(imgUrl)}`;
+        if (location.hostname.includes('netlify.app')) return `/.netlify/functions/api/proxy?url=${encodeURIComponent(imgUrl)}`;
         return `/proxy?url=${encodeURIComponent(imgUrl)}`;
     }
 
