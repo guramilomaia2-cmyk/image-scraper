@@ -7,8 +7,6 @@ const https = require('https');
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
-const chromium = require('@sparticuz/chromium');
-const serverless = require('serverless-http');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -304,13 +302,9 @@ function imagePriority(url, targetUrl) {
 }
 
 async function fetchWithPuppeteer(url) {
-  const executablePath = await chromium.executablePath();
   const browser = await puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath: executablePath || process.env.CHROME_BIN,
-    headless: chromium.headless,
-    ignoreHTTPSErrors: true,
+    headless: "new",
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
   });
   try {
     const page = await browser.newPage();
@@ -664,7 +658,7 @@ app.get('/api/limits', async (req, res) => {
   });
 });
 
-app.post(['/scrape', '/api/scrape', '/api/extract', '/.netlify/functions/api/scrape', '/.netlify/functions/api/extract', '/.netlify/functions/api'], async (req, res) => {
+app.post(['/scrape', '/api/scrape', '/api/extract'], async (req, res) => {
   let { url } = req.body;
 
   if (!url) {
@@ -862,7 +856,7 @@ app.get('/proxy', async (req, res) => {
 });
 
 // Proxy endpoint: download an image through the server to avoid CORS issues
-app.get(['/proxy', '/api/proxy', '/.netlify/functions/api/proxy'], async (req, res) => {
+app.get(['/proxy', '/api/proxy'], async (req, res) => {
   const { url } = req.query;
   if (!url) return res.status(400).send('Missing url');
 
@@ -896,5 +890,6 @@ app.get(['/proxy', '/api/proxy', '/.netlify/functions/api/proxy'], async (req, r
   }
 });
 
-// Export for Netlify Functions
-module.exports.handler = serverless(app);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n🖼️  Image Scraper running at http://0.0.0.0:${PORT}\n`);
+});
