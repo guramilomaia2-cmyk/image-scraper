@@ -321,10 +321,22 @@ async function fetchWithPuppeteer(url, maxRetries = 3) {
         console.log(`[Puppeteer] Attempt ${attempt}: No proxy available, using direct connection`);
       }
 
+      const fs = require('fs');
+      let chromePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
+      if (!chromePath) {
+        if (process.platform === 'win32') {
+          chromePath = fs.existsSync('C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe') 
+            ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' 
+            : 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
+        } else {
+          chromePath = '/usr/bin/google-chrome-stable';
+        }
+      }
+
       browser = await puppeteer.launch({
         headless: "new",
         args: args,
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN || '/usr/bin/google-chrome-stable',
+        executablePath: chromePath,
         ignoreHTTPSErrors: true
       });
 
@@ -571,7 +583,10 @@ async function fetchHtmlContent(targetUrl) {
   methods.push({
     name: 'allorigins',
     fn: async () => {
-      const res = await axios.get(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, { timeout: 15000 });
+      const res = await axios.get(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, { 
+        timeout: 15000,
+        httpsAgent: new https.Agent({ rejectUnauthorized: false })
+      });
       return res.data;
     }
   });
@@ -579,7 +594,10 @@ async function fetchHtmlContent(targetUrl) {
   methods.push({
     name: 'corsproxy',
     fn: async () => {
-      const res = await axios.get(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, { timeout: 8000 });
+      const res = await axios.get(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, { 
+        timeout: 8000,
+        httpsAgent: new https.Agent({ rejectUnauthorized: false })
+      });
       return res.data;
     }
   });
