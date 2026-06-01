@@ -8,6 +8,7 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
 const chromium = require('@sparticuz/chromium');
+const serverless = require('serverless-http');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -663,7 +664,7 @@ app.get('/api/limits', async (req, res) => {
   });
 });
 
-app.post(['/scrape', '/api/scrape', '/api/extract'], async (req, res) => {
+app.post(['/scrape', '/api/scrape', '/api/extract', '/.netlify/functions/api/scrape', '/.netlify/functions/api/extract', '/.netlify/functions/api'], async (req, res) => {
   let { url } = req.body;
 
   if (!url) {
@@ -842,10 +843,58 @@ app.get('/proxy', async (req, res) => {
       if (!res.headersSent) res.status(500).send('Stream error');
     }).pipe(res);
   } catch (err) {
+    console.error('Scrape error:', err.message);
+
+    if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED') {
+      return res.status(400).json({ error: 'Could not reach the website. Check the URL and try again.' });
+    }
+    if (err.response) {
+      return res.status(400).json({
+        error: `Website returned error ${err.response.status}. The site may be blocking scrapers.`,
+      });
+    }
+    if (err.code === 'ECONNABORTED') {
+      return res.status(400).json({ error: 'Request timed out. The website took too long to respond.' });
+    }
+
+    return res.status(500).json({ error: 'Failed to scrape the page. ' + err.message });
+  }
+});
+
+// Proxy endpoint: download an image through the server to avoid CORS issues
+app.get(['/proxy', '/api/proxy', '/.netlify/functions/api/proxy'], async (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).send('Missing url');
+
+  try {
+    const response = await axios.get(url, {
+      responseType: 'stream',
+      timeout: 15000,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Referer: url,
+      },
+    });
+
+    const contentType = response.headers['content-type'] || 'image/jpeg';
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    // Suggest filename
+    const urlPath = new URL(url).pathname;
+    const filename = path.basename(urlPath) || 'image.jpg';
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    response.data.on('error', (e) => {
+      console.error('Stream error:', e.message);
+      if (!res.headersSent) res.status(500).send('Stream error');
+    }).pipe(res);
+  } catch (err) {
     res.status(500).send('Failed to proxy image: ' + err.message);
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`\n🖼️  Image Scraper running at http://localhost:${PORT}\n`);
-});
+// Export for Netlify Functions
+module.exports.handler = serverless(app);
