@@ -17,6 +17,9 @@ RUN npm install
 # Copy application code
 COPY . .
 
+# Build frontend
+RUN cd frontend && npm install && npm run build
+
 # Expose port
 EXPOSE 3000
 

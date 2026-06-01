@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'frontend/dist')));
 
 // Silence favicon 404s
 app.get('/favicon.ico', (req, res) => res.status(204).end());
