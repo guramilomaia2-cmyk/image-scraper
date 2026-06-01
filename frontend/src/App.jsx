@@ -339,7 +339,7 @@ export default function App() {
   const showGrid = displayImages.length > 0;
 
   return (
-    <div className="relative z-[1] max-w-[1440px] mx-auto px-6 pt-6 pb-16">
+    <div style={{ position: 'relative', zIndex: 1, maxWidth: '1440px', margin: '0 auto', padding: '24px 24px 64px' }}>
       <Header />
       <SearchBar onScrape={handleScrape} isLoading={isLoading} />
 
