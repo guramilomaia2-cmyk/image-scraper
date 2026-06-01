@@ -280,25 +280,9 @@
     }
 
     async function fetchApiLimits() {
-        const endpoints = [];
-        if (location.protocol === 'file:') {
-            endpoints.push('http://localhost:3000/api/limits');
-        } else {
-            endpoints.push('/api/limits', '/.netlify/functions/limits');
-        }
-        for (const endpoint of endpoints) {
-            try {
-                const resp = await fetch(endpoint, { signal: AbortSignal.timeout(5000) });
-                if (resp.ok) {
-                    const json = await resp.json();
-                    if (json && json.creditsLeft !== undefined) {
-                        limitsLeft.textContent = json.creditsLeft.toLocaleString();
-                        limitsTotal.textContent = json.requestLimit.toLocaleString();
-                        apiLimitsWrap.style.display = 'flex';
-                        return;
-                    }
-                }
-            } catch (e) { /* fallback */ }
+        // ScraperAPI removed, hide limits UI
+        if (apiLimitsWrap) {
+            apiLimitsWrap.style.display = 'none';
         }
     }
 
