@@ -841,6 +841,11 @@ app.get(['/proxy', '/api/proxy'], async (req, res) => {
   }
 });
 
+// SPA fallback — serve index.html for React Router client-side routes (/ka, /en, etc.)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend/dist/index.html'));
+});
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n🖼️  Image Scraper running at http://0.0.0.0:${PORT}\n`);
 });
