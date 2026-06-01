@@ -308,8 +308,11 @@ async function fetchWithPuppeteer(url, maxRetries = 3) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     let browser = null;
     try {
-      const proxyServer = await getRandomProxy();
-      const args = ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'];
+      // First attempt is always direct (no proxy) to see if StealthPlugin alone works
+      const useProxy = attempt > 1;
+      const proxyServer = useProxy ? await getRandomProxy() : null;
+      
+      const args = ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-accelerated-2d-canvas', '--disable-gpu'];
       
       if (proxyServer) {
         console.log(`[Puppeteer] Attempt ${attempt}: Using proxy ${proxyServer}`);
@@ -320,7 +323,9 @@ async function fetchWithPuppeteer(url, maxRetries = 3) {
 
       browser = await puppeteer.launch({
         headless: "new",
-        args: args
+        args: args,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN || undefined,
+        ignoreHTTPSErrors: true
       });
 
       const page = await browser.newPage();
@@ -343,12 +348,14 @@ async function fetchWithPuppeteer(url, maxRetries = 3) {
       });
       
       // Free proxies can be very slow, so increase timeout
-      await page.goto(url, { waitUntil: 'networkidle2', timeout: 35000 });
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      // Wait a bit for JS to render
+      await new Promise(r => setTimeout(r, 2000));
       const html = await page.content();
       
       // Basic check if we got blocked even with proxy
       if (isBlockedPage(html)) {
-        throw new Error('Blocked by target site with this proxy');
+        throw new Error('Blocked by target site with this proxy/IP');
       }
       
       return html;
