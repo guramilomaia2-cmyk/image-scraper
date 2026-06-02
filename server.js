@@ -643,8 +643,8 @@ async function fetchHtmlContent(targetUrl) {
       const jobId = initRes.data?.data?.id;
       if (!jobId) throw new Error('No job ID returned from extract.pics');
       
-      // Poll for results for up to 50 seconds
-      for (let i = 0; i < 25; i++) {
+      // Poll for results for up to 110 seconds
+      for (let i = 0; i < 55; i++) {
         await new Promise(r => setTimeout(r, 2000));
         const statusRes = await axios.get(`https://api.extract.pics/v0/extractions/${jobId}`, {
           headers: { 'Authorization': `Bearer ${apiKey}` },
@@ -674,7 +674,8 @@ async function fetchHtmlContent(targetUrl) {
   });
 
   let errors = [];
-  for (const attempt of methods) {
+  for (let i = 0; i < methods.length; i++) {
+    const attempt = methods[i];
     try {
       console.log(`[Express] Trying method: ${attempt.name}`);
       const html = await attempt.fn();
@@ -685,6 +686,12 @@ async function fetchHtmlContent(targetUrl) {
     } catch (err) {
       errors.push(`${attempt.name} => ${err.message}`);
       console.log(`[Express] Attempt ${attempt.name} failed: ${err.message}`);
+      
+      // Fast-track to extract_pics if we hit severe bot protection
+      if ((err.message.includes('CAPTCHA') || err.message.includes('Cloudflare') || err.response?.status === 403 || err.response?.status === 503) && attempt.name !== 'extract_pics') {
+        console.log(`[Express] Detected Cloudflare/CAPTCHA, fast-tracking to extract_pics to save time!`);
+        i = methods.length - 2; // Next iteration will be the last method
+      }
     }
   }
 
