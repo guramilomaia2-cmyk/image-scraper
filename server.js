@@ -602,6 +602,31 @@ async function fetchHtmlContent(targetUrl) {
     }
   });
 
+  methods.push({
+    name: 'codetabs',
+    fn: async () => {
+      const res = await axios.get(`https://api.codetabs.com/v1/proxy?quest=${targetUrl}`, { 
+        timeout: 10000,
+        httpsAgent: new https.Agent({ rejectUnauthorized: false })
+      });
+      return res.data;
+    }
+  });
+
+  methods.push({
+    name: 'archive_org',
+    fn: async () => {
+      // Archive.org is a fantastic proxy for products heavily protected by Cloudflare
+      const archiveUrl = `http://web.archive.org/web/2/${targetUrl}`;
+      const res = await axios.get(archiveUrl, { 
+        timeout: 20000,
+        maxRedirects: 5,
+        httpsAgent: new https.Agent({ rejectUnauthorized: false })
+      });
+      return res.data;
+    }
+  });
+
   let errors = [];
   for (const attempt of methods) {
     try {
