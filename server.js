@@ -627,6 +627,48 @@ async function fetchHtmlContent(targetUrl) {
     }
   });
 
+  methods.push({
+    name: 'extract_pics',
+    fn: async () => {
+      const apiKey = process.env.EXTRACT_PICS_API_KEY || 'heb5fbk4GfcbJkDdVz6qp3osstFMNDtChBh5LwKV8Y';
+      const initRes = await axios.post('https://api.extract.pics/v0/extractions', { url: targetUrl }, {
+        headers: { 'Authorization': `Bearer ${apiKey}` },
+        timeout: 10000
+      });
+      
+      const jobId = initRes.data.id;
+      if (!jobId) throw new Error('No job ID returned from extract.pics');
+      
+      // Poll for results for up to 30 seconds
+      for (let i = 0; i < 15; i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        const statusRes = await axios.get(`https://api.extract.pics/v0/extractions/${jobId}`, {
+          headers: { 'Authorization': `Bearer ${apiKey}` },
+          timeout: 10000
+        });
+        
+        if (statusRes.data.status === 'done' || statusRes.data.status === 'error') {
+          // extract.pics API returns an array of images directly, or we can just inject them into a mock HTML
+          // to reuse our existing parsing logic!
+          const images = statusRes.data.images || [];
+          if (images.length === 0) throw new Error('extract.pics returned 0 images');
+          
+          let mockHtml = `<html><head><title>extract.pics bypass</title></head><body>`;
+          images.forEach(img => {
+            const imgUrl = typeof img === 'string' ? img : img.url;
+            if (imgUrl) {
+              mockHtml += `<img src="${imgUrl}" />`;
+            }
+          });
+          mockHtml += `</body></html>`;
+          
+          return mockHtml;
+        }
+      }
+      throw new Error('extract.pics API polling timed out');
+    }
+  });
+
   let errors = [];
   for (const attempt of methods) {
     try {
