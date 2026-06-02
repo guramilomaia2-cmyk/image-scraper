@@ -631,12 +631,16 @@ async function fetchHtmlContent(targetUrl) {
     name: 'extract_pics',
     fn: async () => {
       const apiKey = process.env.EXTRACT_PICS_API_KEY || 'heb5fbk4GfcbJkDdVz6qp3osstFMNDtChBh5LwKV8Y';
+      const https = require('https');
+      const agent = new https.Agent({ rejectUnauthorized: false });
+      
       const initRes = await axios.post('https://api.extract.pics/v0/extractions', { url: targetUrl }, {
         headers: { 'Authorization': `Bearer ${apiKey}` },
+        httpsAgent: agent,
         timeout: 10000
       });
       
-      const jobId = initRes.data.id;
+      const jobId = initRes.data?.data?.id;
       if (!jobId) throw new Error('No job ID returned from extract.pics');
       
       // Poll for results for up to 30 seconds
@@ -644,13 +648,13 @@ async function fetchHtmlContent(targetUrl) {
         await new Promise(r => setTimeout(r, 2000));
         const statusRes = await axios.get(`https://api.extract.pics/v0/extractions/${jobId}`, {
           headers: { 'Authorization': `Bearer ${apiKey}` },
+          httpsAgent: agent,
           timeout: 10000
         });
         
-        if (statusRes.data.status === 'done' || statusRes.data.status === 'error') {
-          // extract.pics API returns an array of images directly, or we can just inject them into a mock HTML
-          // to reuse our existing parsing logic!
-          const images = statusRes.data.images || [];
+        const status = statusRes.data?.data?.status;
+        if (status === 'done' || status === 'error') {
+          const images = statusRes.data?.data?.images || [];
           if (images.length === 0) throw new Error('extract.pics returned 0 images');
           
           let mockHtml = `<html><head><title>extract.pics bypass</title></head><body>`;
