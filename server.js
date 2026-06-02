@@ -302,7 +302,7 @@ function imagePriority(url, targetUrl) {
   return score;
 }
 
-async function fetchWithPuppeteer(url, maxRetries = 3) {
+async function fetchWithPuppeteer(url, maxRetries = 2) {
   let lastError = null;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -360,7 +360,7 @@ async function fetchWithPuppeteer(url, maxRetries = 3) {
       });
       
       // Free proxies can be very slow, so increase timeout
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 25000 });
       // Wait a bit for JS to render
       await new Promise(r => setTimeout(r, 2000));
       const html = await page.content();
