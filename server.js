@@ -359,8 +359,8 @@ async function fetchWithPuppeteer(url, maxRetries = 2) {
         }
       });
       
-      // Free proxies can be very slow, so increase timeout
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 25000 });
+      // Free proxies can be very slow, but we must limit to 15s to avoid frontend timeout
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
       // Wait a bit for JS to render
       await new Promise(r => setTimeout(r, 2000));
       const html = await page.content();
@@ -584,7 +584,7 @@ async function fetchHtmlContent(targetUrl) {
     name: 'allorigins',
     fn: async () => {
       const res = await axios.get(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, { 
-        timeout: 15000,
+        timeout: 8000,
         httpsAgent: new https.Agent({ rejectUnauthorized: false })
       });
       return res.data;
@@ -606,7 +606,7 @@ async function fetchHtmlContent(targetUrl) {
     name: 'codetabs',
     fn: async () => {
       const res = await axios.get(`https://api.codetabs.com/v1/proxy?quest=${targetUrl}`, { 
-        timeout: 10000,
+        timeout: 8000,
         httpsAgent: new https.Agent({ rejectUnauthorized: false })
       });
       return res.data;
@@ -619,7 +619,7 @@ async function fetchHtmlContent(targetUrl) {
       // Archive.org is a fantastic proxy for products heavily protected by Cloudflare
       const archiveUrl = `http://web.archive.org/web/2/${targetUrl}`;
       const res = await axios.get(archiveUrl, { 
-        timeout: 20000,
+        timeout: 10000,
         maxRedirects: 5,
         httpsAgent: new https.Agent({ rejectUnauthorized: false })
       });
@@ -643,8 +643,8 @@ async function fetchHtmlContent(targetUrl) {
       const jobId = initRes.data?.data?.id;
       if (!jobId) throw new Error('No job ID returned from extract.pics');
       
-      // Poll for results for up to 30 seconds
-      for (let i = 0; i < 15; i++) {
+      // Poll for results for up to 50 seconds
+      for (let i = 0; i < 25; i++) {
         await new Promise(r => setTimeout(r, 2000));
         const statusRes = await axios.get(`https://api.extract.pics/v0/extractions/${jobId}`, {
           headers: { 'Authorization': `Bearer ${apiKey}` },
