@@ -3,7 +3,10 @@ export function getFilename(url) {
     if (url.startsWith('data:')) return 'image.png';
     const p = new URL(url).pathname;
     const base = p.split('/').pop();
-    return base && base.length > 1 ? decodeURIComponent(base) : 'image';
+    let name = base && base.length > 1 ? decodeURIComponent(base) : 'image';
+    // Remove invalid Windows filename characters
+    name = name.replace(/[\\/:*?"<>|]/g, '_').trim();
+    return name || 'image';
   } catch {
     return 'image';
   }
