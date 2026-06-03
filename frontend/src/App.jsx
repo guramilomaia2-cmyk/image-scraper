@@ -65,9 +65,19 @@ export default function App() {
       } else if (sort === 'name-desc') {
         filtered.sort((a, b) => getFilename(b).localeCompare(getFilename(a)));
       } else if (sort === 'size-desc') {
-        filtered.sort((a, b) => parseSizeStr(sizeCache[b] || '') - parseSizeStr(sizeCache[a] || ''));
+        filtered.sort((a, b) => {
+          const d1 = dimCache[a], d2 = dimCache[b];
+          const area1 = d1 ? d1.w * d1.h : 0;
+          const area2 = d2 ? d2.w * d2.h : 0;
+          return area2 - area1;
+        });
       } else if (sort === 'size-asc') {
-        filtered.sort((a, b) => parseSizeStr(sizeCache[a] || '') - parseSizeStr(sizeCache[b] || ''));
+        filtered.sort((a, b) => {
+          const d1 = dimCache[a], d2 = dimCache[b];
+          const area1 = d1 ? d1.w * d1.h : 0;
+          const area2 = d2 ? d2.w * d2.h : 0;
+          return area1 - area2;
+        });
       }
 
       return filtered;
