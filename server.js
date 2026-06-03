@@ -737,16 +737,36 @@ app.post('/api/extract', async (req, res) => {
 async function fetchBoseImages(url) {
   const axios = require('axios');
   const https = require('https');
-  const res = await axios.get(url, {
-    timeout: 15000,
-    httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-    headers: {
-      'User-Agent': randomUA(),
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    }
-  });
+  
+  let html = '';
+  
+  const attemptFetch = async (fetchUrl) => {
+    const res = await axios.get(fetchUrl, {
+      timeout: 15000,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+      headers: {
+        'User-Agent': randomUA(),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+      }
+    });
+    return res.data;
+  };
 
-  const html = res.data;
+  try {
+    // Try CORS proxy first to avoid Render IP blocks from Akamai
+    html = await attemptFetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+  } catch (e1) {
+    try {
+      html = await attemptFetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`);
+    } catch (e2) {
+      try {
+        html = await attemptFetch(url);
+      } catch (e3) {
+        throw new Error('All HTML fetch attempts failed for Bose');
+      }
+    }
+  }
+
   const boseRegex = /https:\/\/assets\.bosecreative\.com\/[^\s"'<>\\}]+|https:\/\/assets\.bose\.com\/[^\s"'<>\\}]+/gi;
   let matches = html.match(boseRegex) || [];
   
