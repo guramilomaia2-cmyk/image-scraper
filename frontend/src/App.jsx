@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useLanguage } from './hooks/useLanguage';
-import { getFilename, parseSizeStr, fetchFileSize, fetchImageBlob, copyToClipboard } from './utils/imageUtils';
+import { getFilename, parseSizeStr, fetchFileSize, fetchImageBlob, copyToClipboard, convertBlobToPng } from './utils/imageUtils';
 import { addToHistory } from './components/SearchBar';
 import { showToast } from './components/Toast';
 import JSZip from 'jszip';
@@ -236,11 +236,21 @@ export default function App() {
       await Promise.all(
         toDownload.map(async (imgUrl) => {
           try {
-            const blob = await fetchImageBlob(imgUrl);
+            let blob = await fetchImageBlob(imgUrl);
             let name = getFilename(imgUrl);
             let ext = (blob.type || '').split('/')[1] || '';
             if (ext === 'jpeg') ext = 'jpg';
             if (ext === 'svg+xml') ext = 'svg';
+
+            // Convert AVIF to PNG automatically
+            if (ext === 'avif') {
+              try {
+                blob = await convertBlobToPng(blob);
+                ext = 'png';
+              } catch (convErr) {
+                console.warn('Failed to convert AVIF to PNG', convErr);
+              }
+            }
 
             if (ext) {
               name = name.replace(/\.(png|jpg|jpeg|webp|gif|svg|bmp|ico|avif)$/i, '');

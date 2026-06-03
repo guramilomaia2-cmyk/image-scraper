@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { X, Copy, Download } from 'lucide-react';
 import { useLanguage } from '../hooks/useLanguage';
-import { getFilename, getExtension, formatBytes, copyToClipboard, fetchImageBlob } from '../utils/imageUtils';
+import { getFilename, getExtension, formatBytes, copyToClipboard, fetchImageBlob, convertBlobToPng } from '../utils/imageUtils';
 import { showToast } from './Toast';
 import { saveAs } from 'file-saver';
 
@@ -66,11 +66,21 @@ export default function Lightbox({ images, currentIndex, onClose, onNavigate, fi
   const handleDownload = useCallback(async () => {
     if (!url) return;
     try {
-      const blob = await fetchImageBlob(url);
+      let blob = await fetchImageBlob(url);
       const mime = blob.type;
       let downloadExt = mime.split('/')[1] || 'jpg';
       if (downloadExt === 'jpeg') downloadExt = 'jpg';
       if (downloadExt === 'svg+xml') downloadExt = 'svg';
+
+      if (downloadExt === 'avif') {
+        try {
+          blob = await convertBlobToPng(blob);
+          downloadExt = 'png';
+        } catch(e) {
+          console.warn('AVIF to PNG conversion failed', e);
+        }
+      }
+
       const fname = getFilename(url);
       let dName = fname.replace(/\.(png|jpg|jpeg|webp|gif|svg|bmp|ico|avif)$/i, '');
       dName = dName + '.' + downloadExt;

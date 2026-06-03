@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { ZoomIn, Copy, Download, Loader2 } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import { useLanguage } from '../hooks/useLanguage';
-import { getFilename, getExtension, fetchImageBlob, copyToClipboard } from '../utils/imageUtils';
+import { getFilename, getExtension, fetchImageBlob, copyToClipboard, convertBlobToPng } from '../utils/imageUtils';
 import { showToast } from './Toast';
 
 export default function ImageCard({
@@ -35,11 +35,21 @@ export default function ImageCard({
       e.stopPropagation();
       setDownloading(true);
       try {
-        const blob = await fetchImageBlob(url);
+        let blob = await fetchImageBlob(url);
         const mime = blob.type;
         let downloadExt = mime.split('/')[1] || 'jpg';
         if (downloadExt === 'jpeg') downloadExt = 'jpg';
         if (downloadExt === 'svg+xml') downloadExt = 'svg';
+
+        if (downloadExt === 'avif') {
+          try {
+            blob = await convertBlobToPng(blob);
+            downloadExt = 'png';
+          } catch(e) {
+            console.warn('AVIF to PNG conversion failed', e);
+          }
+        }
+
         let dName = filename.replace(/\.(png|jpg|jpeg|webp|gif|svg|bmp|ico|avif)$/i, '');
         dName = dName + '.' + downloadExt;
 
