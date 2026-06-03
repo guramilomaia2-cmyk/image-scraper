@@ -734,6 +734,37 @@ app.post('/api/extract', async (req, res) => {
   }
 });
 
+async function fetchBoseImages(url) {
+  const axios = require('axios');
+  const https = require('https');
+  const res = await axios.get(url, {
+    timeout: 15000,
+    httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+    headers: {
+      'User-Agent': randomUA(),
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    }
+  });
+
+  const html = res.data;
+  const boseRegex = /https:\/\/assets\.bosecreative\.com\/[^\s"'<>\\}]+|https:\/\/assets\.bose\.com\/[^\s"'<>\\}]+/gi;
+  let matches = html.match(boseRegex) || [];
+  
+  // Clean entities and filter out 1x1 tracking pixels
+  matches = matches.map(u => u.replace(/&amp;/g, '&').replace(/\\u0026/g, '&'));
+  matches = matches.filter(u => !u.includes('width:1,height:1'));
+  matches = matches.map(u => u.replace(/[",]*$/, ''));
+  matches = Array.from(new Set(matches));
+  
+  // Keep only image transforms or files with extensions
+  const images = matches.filter(u => u.includes('/transform/') || u.includes('/original/') || u.match(/\.(jpg|png|webp|avif)$/i));
+  
+  let titleMatch = html.match(/<title>([^<]+)<\/title>/i);
+  let title = titleMatch ? titleMatch[1].replace(/\n/g, ' ').replace(/\s+/g, ' ').trim() : 'Bose Product';
+  
+  return { images: Array.from(new Set(images)), title, via: 'Bose Custom Extractor' };
+}
+
 app.post(['/scrape', '/api/scrape'], async (req, res) => {
   let { url } = req.body;
 
@@ -757,6 +788,20 @@ app.post(['/scrape', '/api/scrape'], async (req, res) => {
       console.log('[RayBan] WCS API returned no images, falling back to HTML scraping...');
     } catch (err) {
       console.log('[RayBan] WCS API strategy failed:', err.message, '— falling back to HTML scraping.');
+    }
+  }
+
+  // Bose specific custom extractor to fetch all variant colors
+  if (url.toLowerCase().includes('bose.com') || url.toLowerCase().includes('bose.ca')) {
+    try {
+      console.log('[Bose] Detected Bose URL, using custom variant extractor...');
+      const { images, title, via } = await fetchBoseImages(url);
+      if (images.length > 0) {
+        return res.json({ url, count: images.length, images, title, via, preset: 'Bose (All Variants)' });
+      }
+      console.log('[Bose] Custom extractor returned no images, falling back to HTML scraping...');
+    } catch (err) {
+      console.log('[Bose] Custom extractor failed:', err.message, '— falling back to HTML scraping.');
     }
   }
 
