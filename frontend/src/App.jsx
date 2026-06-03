@@ -25,6 +25,8 @@ export default function App() {
   const [selectedUrls, setSelectedUrls] = useState(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [readyZipUrl, setReadyZipUrl] = useState(null);
+  const [readyZipName, setReadyZipName] = useState('');
   const [status, setStatus] = useState(null); // { msg, type: 'success'|'error' }
   const [hasSearched, setHasSearched] = useState(false);
   const [pageTitle, setPageTitle] = useState('images');
@@ -267,6 +269,11 @@ export default function App() {
 
       const content = await zip.generateAsync({ type: 'blob' });
       const safeZipName = zipName.replace(/[^a-z0-9\-_]/gi, '_');
+      
+      const zipUrl = URL.createObjectURL(content);
+      setReadyZipUrl(zipUrl);
+      setReadyZipName(`${safeZipName}.zip`);
+      
       saveAs(content, `${safeZipName}.zip`);
 
       showToast(t('toastZipDone'));
@@ -480,6 +487,36 @@ export default function App() {
           onNavigate={handleLightboxNavigate}
           fileSizeCache={fileSizeCache}
         />
+      )}
+
+      {/* Fallback Manual ZIP Download Button */}
+      {readyZipUrl && !isDownloading && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <div className="bg-[var(--surface)] border border-[var(--accent)] p-4 rounded-xl shadow-2xl flex flex-col items-center gap-3 backdrop-blur-md">
+            <p className="text-[0.95rem] font-semibold text-[var(--text)]">
+              {lang === 'ka' ? 'ბრაუზერმა არ გადმოწერა ავტომატურად?' : 'Browser blocked auto-download?'}
+            </p>
+            <div className="flex gap-3">
+              <a 
+                href={readyZipUrl} 
+                download={readyZipName}
+                onClick={() => {
+                  showToast(lang === 'ka' ? 'ჩამოტვირთვა დაიწყო!' : 'Download started!');
+                  setTimeout(() => setReadyZipUrl(null), 3000);
+                }}
+                className="px-6 py-2 bg-[var(--accent)] text-white font-bold rounded-lg shadow-lg hover:scale-105 transition-transform flex items-center justify-center cursor-pointer"
+              >
+                {lang === 'ka' ? 'ხელით გადმოწერა (Click to Save)' : 'Click to Save ZIP'}
+              </a>
+              <button 
+                onClick={() => setReadyZipUrl(null)}
+                className="px-4 py-2 bg-[var(--surface-hover)] border border-[var(--border)] text-[var(--text)] font-semibold rounded-lg hover:bg-black/20 transition-colors"
+              >
+                {lang === 'ka' ? 'დამალვა' : 'Hide'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <Toast />
