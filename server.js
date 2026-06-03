@@ -705,7 +705,36 @@ app.get('/api/limits', async (req, res) => {
   });
 });
 
-app.post(['/scrape', '/api/scrape', '/api/extract'], async (req, res) => {
+app.post('/api/extract', async (req, res) => {
+  const { url } = req.body;
+  if (!url) return res.status(400).json({ error: 'URL required' });
+  try {
+    const https = require('https');
+    const response = await axios.get(url, {
+      responseType: 'stream',
+      timeout: 15000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+      },
+      httpsAgent: new https.Agent({ rejectUnauthorized: false })
+    });
+    
+    if (response.headers['content-type']) {
+      res.set('Content-Type', response.headers['content-type']);
+    }
+    if (response.headers['content-length']) {
+      res.set('Content-Length', response.headers['content-length']);
+    }
+    
+    response.data.pipe(res);
+  } catch (err) {
+    console.error(`[Extract] Failed to proxy image: ${url}`, err.message);
+    res.status(500).json({ error: 'Failed to extract image' });
+  }
+});
+
+app.post(['/scrape', '/api/scrape'], async (req, res) => {
   let { url } = req.body;
 
   if (!url) {
