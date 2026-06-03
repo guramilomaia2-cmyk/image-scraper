@@ -4,6 +4,7 @@ import { getFilename, parseSizeStr, fetchFileSize, fetchImageBlob, copyToClipboa
 import { addToHistory } from './components/SearchBar';
 import { showToast } from './components/Toast';
 import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
@@ -265,13 +266,8 @@ export default function App() {
       if (successCount === 0) throw new Error('No files successfully downloaded');
 
       const content = await zip.generateAsync({ type: 'blob' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(content);
-      a.download = `${zipName}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(a.href);
+      const safeZipName = zipName.replace(/[^a-z0-9\-_]/gi, '_');
+      saveAs(content, `${safeZipName}.zip`);
 
       showToast(t('toastZipDone'));
     } catch (e) {

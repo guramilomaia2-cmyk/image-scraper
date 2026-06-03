@@ -3,6 +3,7 @@ import { X, Copy, Download } from 'lucide-react';
 import { useLanguage } from '../hooks/useLanguage';
 import { getFilename, getExtension, formatBytes, copyToClipboard, fetchImageBlob } from '../utils/imageUtils';
 import { showToast } from './Toast';
+import { saveAs } from 'file-saver';
 
 export default function Lightbox({ images, currentIndex, onClose, onNavigate, fileSizeCache }) {
   const { t } = useLanguage();
@@ -74,13 +75,7 @@ export default function Lightbox({ images, currentIndex, onClose, onNavigate, fi
       let dName = fname.replace(/\.(png|jpg|jpeg|webp|gif|svg|bmp|ico|avif)$/i, '');
       dName = dName + '.' + downloadExt;
 
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = dName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(a.href);
+      saveAs(blob, dName);
       showToast(`${t('toastDownloaded')}: ${dName}`);
     } catch {
       window.open(url, '_blank');

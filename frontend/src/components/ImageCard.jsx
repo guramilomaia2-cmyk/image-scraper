@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { ZoomIn, Copy, Download, Loader2 } from 'lucide-react';
+import { saveAs } from 'file-saver';
 import { useLanguage } from '../hooks/useLanguage';
 import { getFilename, getExtension, fetchImageBlob, copyToClipboard } from '../utils/imageUtils';
 import { showToast } from './Toast';
@@ -40,13 +41,7 @@ export default function ImageCard({
         let dName = filename.replace(/\.(png|jpg|jpeg|webp|gif|svg|bmp|ico|avif)$/i, '');
         dName = dName + '.' + downloadExt;
 
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = dName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(a.href);
+        saveAs(blob, dName);
 
         showToast(`${t('toastDownloaded')}: ${dName}`);
       } catch (err) {
