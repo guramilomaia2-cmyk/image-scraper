@@ -760,9 +760,14 @@ async function fetchBoseImages(url) {
       html = await attemptFetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`);
     } catch (e2) {
       try {
-        html = await attemptFetch(url);
+        console.log('[Bose] Proxies failed, trying Puppeteer...');
+        html = await fetchWithPuppeteer(url);
       } catch (e3) {
-        throw new Error('All HTML fetch attempts failed for Bose');
+        try {
+          html = await attemptFetch(url);
+        } catch (e4) {
+          throw new Error('All HTML fetch attempts failed for Bose');
+        }
       }
     }
   }
