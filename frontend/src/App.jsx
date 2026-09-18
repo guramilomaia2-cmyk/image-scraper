@@ -362,12 +362,14 @@ export default function App() {
   const showGrid = displayImages.length > 0;
 
   return (
-    <div style={{ position: 'relative', zIndex: 1, maxWidth: '1200px', margin: '0 auto', padding: '24px 40px 64px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <Header />
+    <div style={{ position: 'relative', zIndex: 1, maxWidth: '1200px', width: '100%', margin: '0 auto', padding: '16px 24px 64px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div className="w-full">
+        <Header />
+      </div>
 
       {/* Hero Section - Clean, bold, and modern */}
       {!hasSearched && (
-        <div className="relative flex flex-col items-center text-center pt-10 sm:pt-16 pb-4 px-6 max-w-2xl mx-auto transition-all duration-700 animate-in fade-in">
+        <div className="relative flex flex-col items-center text-center pt-8 sm:pt-14 pb-4 px-4 max-w-3xl w-full mx-auto transition-all duration-700 animate-in fade-in">
           {/* Ambient Brand Glow */}
           <div 
             className="absolute -top-10 left-1/2 -translate-x-1/2 w-[320px] sm:w-[500px] h-[200px] pointer-events-none rounded-full blur-[90px] -z-10 opacity-70"
@@ -377,18 +379,20 @@ export default function App() {
           />
 
           {/* Hero Headline */}
-          <h2 className="text-2xl sm:text-4xl lg:text-[2.75rem] font-extrabold tracking-tight text-[var(--text)] leading-[1.15] mb-4">
+          <h2 className="text-2xl sm:text-4xl lg:text-[2.6rem] font-extrabold tracking-tight text-[var(--text)] leading-[1.2] mb-4 text-center">
             {t('heroTitle')}
           </h2>
 
           {/* Hero Subtitle */}
-          <p className="text-sm sm:text-[0.95rem] text-[var(--text-muted)] max-w-md font-normal leading-relaxed mb-8">
+          <p className="text-sm sm:text-base text-[var(--text-muted)] max-w-xl font-normal leading-relaxed mb-6 text-center mx-auto">
             {t('heroSubtitle')}
           </p>
         </div>
       )}
 
-      <SearchBar onScrape={handleScrape} isLoading={isLoading} hasSearched={hasSearched} />
+      <div className="w-full flex justify-center">
+        <SearchBar onScrape={handleScrape} isLoading={isLoading} hasSearched={hasSearched} />
+      </div>
 
       {/* Status */}
       {status && (
@@ -447,14 +451,16 @@ export default function App() {
 
       {/* Image Grid */}
       {showGrid && !isLoading && (
-        <ImageGrid
-          images={displayImages}
-          selectedUrls={selectedUrls}
-          onToggleSelect={handleToggleSelect}
-          onOpenLightbox={handleOpenLightbox}
-          gridSize={gridSize}
-          fileSizeCache={fileSizeCache}
-        />
+        <div className="w-full">
+          <ImageGrid
+            images={displayImages}
+            selectedUrls={selectedUrls}
+            onToggleSelect={handleToggleSelect}
+            onOpenLightbox={handleOpenLightbox}
+            gridSize={gridSize}
+            fileSizeCache={fileSizeCache}
+          />
+        </div>
       )}
 
       {/* Empty State */}
@@ -483,23 +489,23 @@ export default function App() {
 
       {/* Initial State - Clean 3-Step Feature Cards */}
       {showInitial && (
-        <div className="w-full max-w-3xl mx-auto px-4 mt-4 mb-8 transition-all duration-700 animate-in fade-in">
+        <div className="w-full max-w-4xl mx-auto px-4 mt-6 mb-12 flex flex-col items-center transition-all duration-700 animate-in fade-in">
           {/* Section Header */}
-          <div className="text-center mb-10">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--accent)] mb-3">
+          <div className="flex flex-col items-center text-center mb-10 w-full">
+            <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[var(--accent)] mb-3 text-center">
               {t('instructionsTitle')}
             </h3>
-            <p className="text-sm text-[var(--text-muted)] max-w-sm mx-auto leading-relaxed">
+            <p className="text-sm sm:text-base text-[var(--text-muted)] max-w-xl text-center leading-relaxed mx-auto">
               {t('aboutText')}
             </p>
           </div>
 
           {/* 3 Step Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
             
             {/* Step 1 */}
             <div 
-              className="flex flex-col items-center text-center p-7 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/50 group"
+              className="flex flex-col items-center text-center p-7 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/50 group h-full"
               style={{
                 background: 'var(--glass-bg)',
                 backdropFilter: 'var(--glass-blur)',
@@ -511,17 +517,17 @@ export default function App() {
               <div className="w-12 h-12 rounded-xl bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center font-extrabold text-base mb-4 group-hover:bg-[var(--accent)] group-hover:text-white transition-all duration-300 shadow-sm">
                 01
               </div>
-              <h4 className="font-bold text-[0.95rem] mb-2 text-[var(--text)] tracking-tight">
+              <h4 className="font-bold text-base mb-2 text-[var(--text)] tracking-tight text-center">
                 {t('instruction1Title')}
               </h4>
-              <p className="text-[0.82rem] text-[var(--text-muted)] leading-[1.7] font-normal">
+              <p className="text-sm text-[var(--text-muted)] leading-[1.65] font-normal text-center">
                 {t('instruction1Desc')}
               </p>
             </div>
 
             {/* Step 2 */}
             <div 
-              className="flex flex-col items-center text-center p-7 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/50 group"
+              className="flex flex-col items-center text-center p-7 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/50 group h-full"
               style={{
                 background: 'var(--glass-bg)',
                 backdropFilter: 'var(--glass-blur)',
@@ -533,17 +539,17 @@ export default function App() {
               <div className="w-12 h-12 rounded-xl bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center font-extrabold text-base mb-4 group-hover:bg-[var(--accent)] group-hover:text-white transition-all duration-300 shadow-sm">
                 02
               </div>
-              <h4 className="font-bold text-[0.95rem] mb-2 text-[var(--text)] tracking-tight">
+              <h4 className="font-bold text-base mb-2 text-[var(--text)] tracking-tight text-center">
                 {t('instruction2Title')}
               </h4>
-              <p className="text-[0.82rem] text-[var(--text-muted)] leading-[1.7] font-normal">
+              <p className="text-sm text-[var(--text-muted)] leading-[1.65] font-normal text-center">
                 {t('instruction2Desc')}
               </p>
             </div>
 
             {/* Step 3 */}
             <div 
-              className="flex flex-col items-center text-center p-7 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/50 group"
+              className="flex flex-col items-center text-center p-7 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/50 group h-full"
               style={{
                 background: 'var(--glass-bg)',
                 backdropFilter: 'var(--glass-blur)',
@@ -555,10 +561,10 @@ export default function App() {
               <div className="w-12 h-12 rounded-xl bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center font-extrabold text-base mb-4 group-hover:bg-[var(--accent)] group-hover:text-white transition-all duration-300 shadow-sm">
                 03
               </div>
-              <h4 className="font-bold text-[0.95rem] mb-2 text-[var(--text)] tracking-tight">
+              <h4 className="font-bold text-base mb-2 text-[var(--text)] tracking-tight text-center">
                 {t('instruction3Title')}
               </h4>
-              <p className="text-[0.82rem] text-[var(--text-muted)] leading-[1.7] font-normal">
+              <p className="text-sm text-[var(--text-muted)] leading-[1.65] font-normal text-center">
                 {t('instruction3Desc')}
               </p>
             </div>
