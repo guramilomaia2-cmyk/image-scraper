@@ -54,11 +54,12 @@ export default function SearchBar({ onScrape, isLoading, hasSearched }) {
 
   return (
     <div 
-      className={`transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hasSearched ? 'mb-8 sticky z-45' : 'mb-10 relative z-10'}`}
+      className={`transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hasSearched ? 'mb-8 sticky z-45' : 'mb-12 relative z-10'}`}
       style={{ 
-        margin: hasSearched ? '0 auto 2rem' : '0 auto 2.5rem', 
-        maxWidth: '720px', 
+        margin: hasSearched ? '0 auto 2rem' : '0 auto 3rem', 
+        maxWidth: '640px', 
         width: '100%', 
+        padding: '0 16px',
         top: hasSearched ? '96px' : 'auto',
         position: hasSearched ? 'sticky' : 'relative',
         zIndex: hasSearched ? 45 : 10
