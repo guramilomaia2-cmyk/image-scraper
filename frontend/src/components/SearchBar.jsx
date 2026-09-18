@@ -54,14 +54,14 @@ export default function SearchBar({ onScrape, isLoading, hasSearched }) {
 
   return (
     <div 
-      className={`transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hasSearched ? 'mb-8 sticky z-45' : 'mt-[15vh]'}`}
+      className={`transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hasSearched ? 'mb-8 sticky z-45' : 'mb-8 relative z-10'}`}
       style={{ 
-        margin: hasSearched ? '0 auto 2rem' : '15vh auto 0', 
+        margin: hasSearched ? '0 auto 2rem' : '0 auto 2rem', 
         maxWidth: '768px', 
         width: '100%', 
-        top: hasSearched ? '105px' : 'auto',
+        top: hasSearched ? '96px' : 'auto',
         position: hasSearched ? 'sticky' : 'relative',
-        zIndex: 45
+        zIndex: hasSearched ? 45 : 10
       }}
     >
       <form 

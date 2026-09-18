@@ -204,21 +204,19 @@ input[type="range"] {
 @media (max-width: 640px) {
   .glass-header {
     top: 8px;
-    margin: 8px 12px;
-    padding: 8px 16px;
-    border-radius: 24px;
-  }
-  .header-title {
-    display: none !important;
+    margin: 8px 8px 16px;
+    padding: 8px 14px;
+    border-radius: 20px;
   }
   .header-logo {
-    height: 40px !important;
+    height: 36px !important;
   }
   .header-actions {
     gap: 8px !important;
   }
   .header-btn {
-    width: 36px !important;
     height: 36px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
   }
 }

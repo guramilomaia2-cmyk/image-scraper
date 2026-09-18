@@ -14,7 +14,7 @@ import ImageGrid from './components/ImageGrid';
 import Lightbox from './components/Lightbox';
 import Toast from './components/Toast';
 
-import { ScanSearch, ImageOff, FilterX } from 'lucide-react';
+import { ScanSearch, ImageOff, FilterX, Sparkles, ArrowRight, ArrowDown } from 'lucide-react';
 
 export default function App() {
   const { t, lang } = useLanguage();
@@ -364,6 +364,49 @@ export default function App() {
   return (
     <div style={{ position: 'relative', zIndex: 1, maxWidth: '1440px', margin: '0 auto', padding: '24px 24px 64px' }}>
       <Header />
+
+      {/* Hero Section - Displayed above SearchBar on landing view */}
+      {!hasSearched && (
+        <div className="relative flex flex-col items-center text-center pt-8 sm:pt-14 pb-4 px-4 max-w-4xl mx-auto transition-all duration-700 animate-in fade-in slide-in-from-top-4">
+          {/* Ambient Brand Glow */}
+          <div 
+            className="absolute -top-12 left-1/2 -translate-x-1/2 w-[300px] sm:w-[540px] h-[220px] pointer-events-none rounded-full blur-[80px] -z-10"
+            style={{
+              background: 'radial-gradient(circle, rgba(0, 111, 245, 0.22) 0%, rgba(0, 86, 214, 0.08) 55%, transparent 80%)'
+            }}
+          />
+
+          {/* Micro-pill badge */}
+          <div 
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold mb-5 transition-transform duration-300 hover:scale-105 shadow-sm"
+            style={{
+              background: 'var(--glass-bg)',
+              backdropFilter: 'var(--glass-blur)',
+              WebkitBackdropFilter: 'var(--glass-blur)',
+              border: '1px solid rgba(0, 111, 245, 0.3)',
+              boxShadow: '0 2px 14px var(--accent-glow)'
+            }}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[var(--accent)] animate-pulse" />
+            <span className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] bg-clip-text text-transparent">
+              {t('heroBadge')}
+            </span>
+          </div>
+
+          {/* Hero Headline */}
+          <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight max-w-3xl leading-[1.15] mb-4 text-[var(--text)]">
+            <span className="bg-gradient-to-b from-[var(--text)] via-[var(--text)] to-[var(--text)]/80 bg-clip-text text-transparent">
+              {t('heroTitle')}
+            </span>
+          </h2>
+
+          {/* Hero Subtitle */}
+          <p className="text-base sm:text-lg md:text-xl text-[var(--text-muted)] max-w-2xl font-normal leading-relaxed mb-4">
+            {t('heroSubtitle')}
+          </p>
+        </div>
+      )}
+
       <SearchBar onScrape={handleScrape} isLoading={isLoading} hasSearched={hasSearched} />
 
       {/* Status */}
@@ -457,43 +500,107 @@ export default function App() {
         </div>
       )}
 
-      {/* Initial State */}
+      {/* Initial State - How It Works */}
       {showInitial && (
-        <div className="text-center py-16 px-6 text-[var(--text)] transition-all duration-700 animate-in fade-in zoom-in-95 flex flex-col items-center justify-center"
-             style={{ margin: '5vh auto 0', maxWidth: '800px', width: '100%', borderRadius: '32px', background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: '1px solid var(--glass-border)', boxShadow: 'var(--glass-shadow)' }}>
-          <h2 className="text-[2rem] font-bold mb-4 tracking-tight text-center w-full">{t('appTitle')}</h2>
-          <p className="text-[1.1rem] opacity-70 font-medium max-w-2xl text-center leading-relaxed mb-10">
-            {t('aboutText')}
-          </p>
-          
-          <div className="text-center bg-[rgba(0,0,0,0.02)] dark:bg-[rgba(255,255,255,0.02)] rounded-3xl p-8 md:p-10 max-w-3xl w-full border border-[var(--glass-border)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
-            <h3 className="text-[1.3rem] font-bold mb-10 text-[var(--accent)] flex items-center justify-center gap-3">
-              <ScanSearch className="w-6 h-6" />
-              {t('instructionsTitle')}
-            </h3>
-            <ul className="grid grid-cols-1 md:grid-cols-3 gap-8 text-[0.95rem] opacity-90 font-medium">
-              <li className="flex flex-col items-center text-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center flex-shrink-0 font-bold text-xl shadow-sm">1</div>
-                <div>
-                  <h4 className="font-bold text-[1.1rem] mb-2">{t('instruction1Title')}</h4>
-                  <p className="opacity-80 leading-relaxed">{t('instruction1Desc')}</p>
-                </div>
-              </li>
-              <li className="flex flex-col items-center text-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center flex-shrink-0 font-bold text-xl shadow-sm">2</div>
-                <div>
-                  <h4 className="font-bold text-[1.1rem] mb-2">{t('instruction2Title')}</h4>
-                  <p className="opacity-80 leading-relaxed">{t('instruction2Desc')}</p>
-                </div>
-              </li>
-              <li className="flex flex-col items-center text-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center flex-shrink-0 font-bold text-xl shadow-sm">3</div>
-                <div>
-                  <h4 className="font-bold text-[1.1rem] mb-2">{t('instruction3Title')}</h4>
-                  <p className="opacity-80 leading-relaxed">{t('instruction3Desc')}</p>
-                </div>
-              </li>
-            </ul>
+        <div 
+          className="w-full max-w-4xl mx-auto mt-2 px-6 sm:px-10 py-10 sm:py-12 rounded-[32px] transition-all duration-700 animate-in fade-in slide-in-from-bottom-4 flex flex-col items-center"
+          style={{
+            background: 'var(--glass-bg)',
+            backdropFilter: 'var(--glass-blur)',
+            WebkitBackdropFilter: 'var(--glass-blur)',
+            border: '1px solid var(--glass-border)',
+            boxShadow: 'var(--glass-shadow)',
+          }}
+        >
+          {/* Section Header */}
+          <div className="flex flex-col items-center text-center mb-10 sm:mb-12">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-xl text-xs font-bold uppercase tracking-wider text-[var(--accent)] bg-[var(--accent)]/10 border border-[var(--accent)]/25 mb-3.5">
+              <ScanSearch className="w-3.5 h-3.5" />
+              <span>{t('instructionsTitle')}</span>
+            </div>
+            <p className="text-sm sm:text-base text-[var(--text-muted)] max-w-lg leading-[1.7] font-normal">
+              {t('aboutText')}
+            </p>
+          </div>
+
+          {/* Connected 1-2-3 Steps Grid */}
+          <div className="relative grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 w-full">
+            
+            {/* Step 1 */}
+            <div className="relative flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl transition-all duration-300 hover:bg-[var(--glass-hover)] border border-transparent hover:border-[var(--glass-border)] group">
+              <div 
+                className="w-12 h-12 rounded-2xl flex items-center justify-center font-extrabold text-lg text-white mb-4 transition-transform duration-300 group-hover:scale-110 shadow-lg flex-shrink-0"
+                style={{
+                  background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+                  boxShadow: '0 6px 20px var(--accent-glow)'
+                }}
+              >
+                1
+              </div>
+              <h4 className="font-bold text-base sm:text-lg mb-2 text-[var(--text)] tracking-tight">
+                {t('instruction1Title')}
+              </h4>
+              <p className="text-sm text-[var(--text-muted)] leading-[1.65] font-normal max-w-xs">
+                {t('instruction1Desc')}
+              </p>
+
+              {/* Desktop Connecting Arrow 1 -> 2 */}
+              <div className="hidden md:flex absolute top-11 -right-3 z-10 text-[var(--accent)] opacity-70 pointer-events-none transition-transform group-hover:translate-x-0.5">
+                <ArrowRight className="w-5 h-5" />
+              </div>
+              {/* Mobile Connecting Arrow 1 -> 2 */}
+              <div className="flex md:hidden text-[var(--accent)] opacity-60 mt-3 pointer-events-none">
+                <ArrowDown className="w-4 h-4" />
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="relative flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl transition-all duration-300 hover:bg-[var(--glass-hover)] border border-transparent hover:border-[var(--glass-border)] group">
+              <div 
+                className="w-12 h-12 rounded-2xl flex items-center justify-center font-extrabold text-lg text-white mb-4 transition-transform duration-300 group-hover:scale-110 shadow-lg flex-shrink-0"
+                style={{
+                  background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+                  boxShadow: '0 6px 20px var(--accent-glow)'
+                }}
+              >
+                2
+              </div>
+              <h4 className="font-bold text-base sm:text-lg mb-2 text-[var(--text)] tracking-tight">
+                {t('instruction2Title')}
+              </h4>
+              <p className="text-sm text-[var(--text-muted)] leading-[1.65] font-normal max-w-xs">
+                {t('instruction2Desc')}
+              </p>
+
+              {/* Desktop Connecting Arrow 2 -> 3 */}
+              <div className="hidden md:flex absolute top-11 -right-3 z-10 text-[var(--accent)] opacity-70 pointer-events-none transition-transform group-hover:translate-x-0.5">
+                <ArrowRight className="w-5 h-5" />
+              </div>
+              {/* Mobile Connecting Arrow 2 -> 3 */}
+              <div className="flex md:hidden text-[var(--accent)] opacity-60 mt-3 pointer-events-none">
+                <ArrowDown className="w-4 h-4" />
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="relative flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl transition-all duration-300 hover:bg-[var(--glass-hover)] border border-transparent hover:border-[var(--glass-border)] group">
+              <div 
+                className="w-12 h-12 rounded-2xl flex items-center justify-center font-extrabold text-lg text-white mb-4 transition-transform duration-300 group-hover:scale-110 shadow-lg flex-shrink-0"
+                style={{
+                  background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+                  boxShadow: '0 6px 20px var(--accent-glow)'
+                }}
+              >
+                3
+              </div>
+              <h4 className="font-bold text-base sm:text-lg mb-2 text-[var(--text)] tracking-tight">
+                {t('instruction3Title')}
+              </h4>
+              <p className="text-sm text-[var(--text-muted)] leading-[1.65] font-normal max-w-xs">
+                {t('instruction3Desc')}
+              </p>
+            </div>
+
           </div>
         </div>
       )}
