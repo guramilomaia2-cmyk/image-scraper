@@ -2,7 +2,9 @@ import { createContext, useContext, useMemo, useCallback, useEffect } from 'reac
 import { useNavigate, useParams } from 'react-router-dom';
 import { TRANSLATIONS } from '../utils/translations';
 
-const BASE_URL = 'https://image-scraper-rqhl.onrender.com';
+const BASE_URL = typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')
+  ? window.location.origin
+  : 'https://image-scraper-pi.vercel.app';
 const LanguageContext = createContext();
 
 const SEO = {
