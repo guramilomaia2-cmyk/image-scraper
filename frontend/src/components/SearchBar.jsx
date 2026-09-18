@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link2, SearchCheck } from 'lucide-react';
+import { Link2, Search } from 'lucide-react';
 import { useLanguage } from '../hooks/useLanguage';
 
 function getHistory() {
@@ -18,7 +18,7 @@ export function addToHistory(url) {
 }
 
 export default function SearchBar({ onScrape, isLoading, hasSearched }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [url, setUrl] = useState('');
   const [history] = useState(getHistory);
   const inputRef = useRef(null);
@@ -54,10 +54,10 @@ export default function SearchBar({ onScrape, isLoading, hasSearched }) {
 
   return (
     <div 
-      className={`transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hasSearched ? 'mb-8 sticky z-45' : 'mb-8 relative z-10'}`}
+      className={`transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hasSearched ? 'mb-8 sticky z-45' : 'mb-10 relative z-10'}`}
       style={{ 
-        margin: hasSearched ? '0 auto 2rem' : '0 auto 2rem', 
-        maxWidth: '768px', 
+        margin: hasSearched ? '0 auto 2rem' : '0 auto 2.5rem', 
+        maxWidth: '720px', 
         width: '100%', 
         top: hasSearched ? '96px' : 'auto',
         position: hasSearched ? 'sticky' : 'relative',
@@ -72,13 +72,13 @@ export default function SearchBar({ onScrape, isLoading, hasSearched }) {
           WebkitBackdropFilter: 'var(--glass-blur)',
           border: '1px solid var(--glass-border)',
           boxShadow: 'var(--glass-shadow)',
-          borderRadius: '32px',
-          padding: '4px'
+          borderRadius: '28px',
+          padding: '4px 6px 4px 4px'
         }}
-        className="relative flex items-center group transition-all duration-500 hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] focus-within:!border-[var(--accent)] focus-within:!shadow-[0_8px_32px_var(--accent-glow)]"
+        className="relative flex items-center group transition-all duration-300 hover:border-[rgba(0,111,245,0.4)] hover:shadow-[0_12px_40px_rgba(0,111,245,0.12)] focus-within:!border-[var(--accent)] focus-within:!shadow-[0_8px_32px_var(--accent-glow)]"
       >
-        <div className="relative flex-1 flex items-center h-[56px]">
-          <Link2 className="absolute left-5 w-5 h-5 text-[var(--text-faint)] group-focus-within:text-[var(--accent)] transition-colors duration-300 pointer-events-none" />
+        <div className="relative flex-1 flex items-center h-[52px]">
+          <Link2 className="absolute left-4.5 w-5 h-5 text-[var(--accent)]/70 group-focus-within:text-[var(--accent)] transition-colors duration-300 pointer-events-none" />
           <input
             ref={inputRef}
             type="url"
@@ -88,8 +88,8 @@ export default function SearchBar({ onScrape, isLoading, hasSearched }) {
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             disabled={isLoading}
-            className="w-full h-full bg-transparent border-none text-[1.1rem] text-[var(--text)] font-medium outline-none disabled:opacity-50 placeholder:text-[var(--text-faint)] placeholder:font-normal"
-            style={{ paddingLeft: '52px', paddingRight: '16px' }}
+            className="w-full h-full bg-transparent border-none text-[0.98rem] sm:text-[1.05rem] text-[var(--text)] font-normal outline-none disabled:opacity-50 placeholder:text-[var(--text-faint)]"
+            style={{ paddingLeft: '48px', paddingRight: '12px' }}
             autoComplete="off"
             spellCheck="false"
             list="urlHistory"
@@ -101,18 +101,27 @@ export default function SearchBar({ onScrape, isLoading, hasSearched }) {
           </datalist>
         </div>
         
+        {/* Search / Extract Action Button - Always visible with clean Apple styling */}
         <button
           type="submit"
-          disabled={isLoading || !url.trim()}
-          className="flex items-center justify-center w-[52px] h-[52px] mr-1 rounded-[26px] text-white cursor-pointer transition-all duration-400 ease-[cubic-bezier(0.25,1,0.5,1)] disabled:opacity-0 disabled:-translate-x-4 disabled:pointer-events-none"
+          disabled={isLoading}
+          className="flex items-center justify-center gap-2 h-[44px] px-5 rounded-[22px] text-white font-semibold text-sm cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:scale-[1.03] active:scale-[0.97] flex-shrink-0 shadow-md hover:shadow-lg"
           style={{ 
-            background: 'linear-gradient(135deg, var(--accent-2), var(--accent))',
-            boxShadow: '0 4px 16px var(--accent-glow), inset 0 2px 0 rgba(255,255,255,0.2)'
+            background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+            boxShadow: '0 4px 14px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.25)'
           }}
-          onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 8px 24px var(--accent-glow), inset 0 2px 0 rgba(255,255,255,0.2)'; } }}
-          onMouseLeave={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 16px var(--accent-glow), inset 0 2px 0 rgba(255,255,255,0.2)'; } }}
+          title={lang === 'ka' ? 'სურათების ამოღება' : 'Extract Images'}
         >
-          {isLoading ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <SearchCheck className="w-[22px] h-[22px]" />}
+          {isLoading ? (
+            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <>
+              <Search className="w-4 h-4 text-white" />
+              <span className="hidden sm:inline font-bold tracking-tight">
+                {lang === 'ka' ? 'ამოღება' : 'Extract'}
+              </span>
+            </>
+          )}
         </button>
       </form>
     </div>

@@ -60,7 +60,7 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans Georgian', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
   background: var(--bg-gradient);
   background-attachment: fixed;
   color: var(--text);

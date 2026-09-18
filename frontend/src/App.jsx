@@ -365,43 +365,24 @@ export default function App() {
     <div style={{ position: 'relative', zIndex: 1, maxWidth: '1440px', margin: '0 auto', padding: '24px 24px 64px' }}>
       <Header />
 
-      {/* Hero Section - Displayed above SearchBar on landing view */}
+      {/* Hero Section - Clean, bold, and modern */}
       {!hasSearched && (
-        <div className="relative flex flex-col items-center text-center pt-8 sm:pt-14 pb-4 px-4 max-w-4xl mx-auto transition-all duration-700 animate-in fade-in slide-in-from-top-4">
+        <div className="relative flex flex-col items-center text-center pt-6 sm:pt-10 pb-2 px-4 max-w-3xl mx-auto transition-all duration-700 animate-in fade-in">
           {/* Ambient Brand Glow */}
           <div 
-            className="absolute -top-12 left-1/2 -translate-x-1/2 w-[300px] sm:w-[540px] h-[220px] pointer-events-none rounded-full blur-[80px] -z-10"
+            className="absolute -top-10 left-1/2 -translate-x-1/2 w-[320px] sm:w-[500px] h-[200px] pointer-events-none rounded-full blur-[90px] -z-10 opacity-70"
             style={{
-              background: 'radial-gradient(circle, rgba(0, 111, 245, 0.22) 0%, rgba(0, 86, 214, 0.08) 55%, transparent 80%)'
+              background: 'radial-gradient(circle, rgba(0, 111, 245, 0.2) 0%, rgba(0, 86, 214, 0.06) 60%, transparent 80%)'
             }}
           />
 
-          {/* Micro-pill badge */}
-          <div 
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold mb-5 transition-transform duration-300 hover:scale-105 shadow-sm"
-            style={{
-              background: 'var(--glass-bg)',
-              backdropFilter: 'var(--glass-blur)',
-              WebkitBackdropFilter: 'var(--glass-blur)',
-              border: '1px solid rgba(0, 111, 245, 0.3)',
-              boxShadow: '0 2px 14px var(--accent-glow)'
-            }}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[var(--accent)] animate-pulse" />
-            <span className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] bg-clip-text text-transparent">
-              {t('heroBadge')}
-            </span>
-          </div>
-
           {/* Hero Headline */}
-          <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight max-w-3xl leading-[1.15] mb-4 text-[var(--text)]">
-            <span className="bg-gradient-to-b from-[var(--text)] via-[var(--text)] to-[var(--text)]/80 bg-clip-text text-transparent">
-              {t('heroTitle')}
-            </span>
+          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[var(--text)] leading-[1.2] mb-3">
+            {t('heroTitle')}
           </h2>
 
           {/* Hero Subtitle */}
-          <p className="text-base sm:text-lg md:text-xl text-[var(--text-muted)] max-w-2xl font-normal leading-relaxed mb-4">
+          <p className="text-sm sm:text-base text-[var(--text-muted)] max-w-lg font-normal leading-relaxed mb-6">
             {t('heroSubtitle')}
           </p>
         </div>
@@ -500,103 +481,84 @@ export default function App() {
         </div>
       )}
 
-      {/* Initial State - How It Works */}
+      {/* Initial State - Clean 3-Step Feature Cards */}
       {showInitial && (
-        <div 
-          className="w-full max-w-4xl mx-auto mt-2 px-6 sm:px-10 py-10 sm:py-12 rounded-[32px] transition-all duration-700 animate-in fade-in slide-in-from-bottom-4 flex flex-col items-center"
-          style={{
-            background: 'var(--glass-bg)',
-            backdropFilter: 'var(--glass-blur)',
-            WebkitBackdropFilter: 'var(--glass-blur)',
-            border: '1px solid var(--glass-border)',
-            boxShadow: 'var(--glass-shadow)',
-          }}
-        >
+        <div className="w-full max-w-4xl mx-auto px-4 mt-2 transition-all duration-700 animate-in fade-in">
           {/* Section Header */}
-          <div className="flex flex-col items-center text-center mb-10 sm:mb-12">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-xl text-xs font-bold uppercase tracking-wider text-[var(--accent)] bg-[var(--accent)]/10 border border-[var(--accent)]/25 mb-3.5">
-              <ScanSearch className="w-3.5 h-3.5" />
-              <span>{t('instructionsTitle')}</span>
-            </div>
-            <p className="text-sm sm:text-base text-[var(--text-muted)] max-w-lg leading-[1.7] font-normal">
+          <div className="text-center mb-8">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--accent)] mb-2">
+              {t('instructionsTitle')}
+            </h3>
+            <p className="text-sm text-[var(--text-muted)] max-w-md mx-auto leading-relaxed">
               {t('aboutText')}
             </p>
           </div>
 
-          {/* Connected 1-2-3 Steps Grid */}
-          <div className="relative grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 w-full">
+          {/* 3 Step Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 relative">
             
             {/* Step 1 */}
-            <div className="relative flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl transition-all duration-300 hover:bg-[var(--glass-hover)] border border-transparent hover:border-[var(--glass-border)] group">
-              <div 
-                className="w-12 h-12 rounded-2xl flex items-center justify-center font-extrabold text-lg text-white mb-4 transition-transform duration-300 group-hover:scale-110 shadow-lg flex-shrink-0"
-                style={{
-                  background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
-                  boxShadow: '0 6px 20px var(--accent-glow)'
-                }}
-              >
-                1
+            <div 
+              className="flex flex-col items-center text-center p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/50 group"
+              style={{
+                background: 'var(--glass-bg)',
+                backdropFilter: 'var(--glass-blur)',
+                WebkitBackdropFilter: 'var(--glass-blur)',
+                border: '1px solid var(--glass-border)',
+                boxShadow: 'var(--glass-shadow)',
+              }}
+            >
+              <div className="w-11 h-11 rounded-xl bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center font-extrabold text-base mb-4 group-hover:bg-[var(--accent)] group-hover:text-white transition-all duration-300 shadow-sm">
+                01
               </div>
-              <h4 className="font-bold text-base sm:text-lg mb-2 text-[var(--text)] tracking-tight">
+              <h4 className="font-bold text-base mb-2 text-[var(--text)] tracking-tight">
                 {t('instruction1Title')}
               </h4>
-              <p className="text-sm text-[var(--text-muted)] leading-[1.65] font-normal max-w-xs">
+              <p className="text-sm text-[var(--text-muted)] leading-[1.65] font-normal">
                 {t('instruction1Desc')}
               </p>
-
-              {/* Desktop Connecting Arrow 1 -> 2 */}
-              <div className="hidden md:flex absolute top-11 -right-3 z-10 text-[var(--accent)] opacity-70 pointer-events-none transition-transform group-hover:translate-x-0.5">
-                <ArrowRight className="w-5 h-5" />
-              </div>
-              {/* Mobile Connecting Arrow 1 -> 2 */}
-              <div className="flex md:hidden text-[var(--accent)] opacity-60 mt-3 pointer-events-none">
-                <ArrowDown className="w-4 h-4" />
-              </div>
             </div>
 
             {/* Step 2 */}
-            <div className="relative flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl transition-all duration-300 hover:bg-[var(--glass-hover)] border border-transparent hover:border-[var(--glass-border)] group">
-              <div 
-                className="w-12 h-12 rounded-2xl flex items-center justify-center font-extrabold text-lg text-white mb-4 transition-transform duration-300 group-hover:scale-110 shadow-lg flex-shrink-0"
-                style={{
-                  background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
-                  boxShadow: '0 6px 20px var(--accent-glow)'
-                }}
-              >
-                2
+            <div 
+              className="flex flex-col items-center text-center p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/50 group"
+              style={{
+                background: 'var(--glass-bg)',
+                backdropFilter: 'var(--glass-blur)',
+                WebkitBackdropFilter: 'var(--glass-blur)',
+                border: '1px solid var(--glass-border)',
+                boxShadow: 'var(--glass-shadow)',
+              }}
+            >
+              <div className="w-11 h-11 rounded-xl bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center font-extrabold text-base mb-4 group-hover:bg-[var(--accent)] group-hover:text-white transition-all duration-300 shadow-sm">
+                02
               </div>
-              <h4 className="font-bold text-base sm:text-lg mb-2 text-[var(--text)] tracking-tight">
+              <h4 className="font-bold text-base mb-2 text-[var(--text)] tracking-tight">
                 {t('instruction2Title')}
               </h4>
-              <p className="text-sm text-[var(--text-muted)] leading-[1.65] font-normal max-w-xs">
+              <p className="text-sm text-[var(--text-muted)] leading-[1.65] font-normal">
                 {t('instruction2Desc')}
               </p>
-
-              {/* Desktop Connecting Arrow 2 -> 3 */}
-              <div className="hidden md:flex absolute top-11 -right-3 z-10 text-[var(--accent)] opacity-70 pointer-events-none transition-transform group-hover:translate-x-0.5">
-                <ArrowRight className="w-5 h-5" />
-              </div>
-              {/* Mobile Connecting Arrow 2 -> 3 */}
-              <div className="flex md:hidden text-[var(--accent)] opacity-60 mt-3 pointer-events-none">
-                <ArrowDown className="w-4 h-4" />
-              </div>
             </div>
 
             {/* Step 3 */}
-            <div className="relative flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl transition-all duration-300 hover:bg-[var(--glass-hover)] border border-transparent hover:border-[var(--glass-border)] group">
-              <div 
-                className="w-12 h-12 rounded-2xl flex items-center justify-center font-extrabold text-lg text-white mb-4 transition-transform duration-300 group-hover:scale-110 shadow-lg flex-shrink-0"
-                style={{
-                  background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
-                  boxShadow: '0 6px 20px var(--accent-glow)'
-                }}
-              >
-                3
+            <div 
+              className="flex flex-col items-center text-center p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/50 group"
+              style={{
+                background: 'var(--glass-bg)',
+                backdropFilter: 'var(--glass-blur)',
+                WebkitBackdropFilter: 'var(--glass-blur)',
+                border: '1px solid var(--glass-border)',
+                boxShadow: 'var(--glass-shadow)',
+              }}
+            >
+              <div className="w-11 h-11 rounded-xl bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center font-extrabold text-base mb-4 group-hover:bg-[var(--accent)] group-hover:text-white transition-all duration-300 shadow-sm">
+                03
               </div>
-              <h4 className="font-bold text-base sm:text-lg mb-2 text-[var(--text)] tracking-tight">
+              <h4 className="font-bold text-base mb-2 text-[var(--text)] tracking-tight">
                 {t('instruction3Title')}
               </h4>
-              <p className="text-sm text-[var(--text-muted)] leading-[1.65] font-normal max-w-xs">
+              <p className="text-sm text-[var(--text-muted)] leading-[1.65] font-normal">
                 {t('instruction3Desc')}
               </p>
             </div>
