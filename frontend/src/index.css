@@ -194,6 +194,8 @@ input[type="range"] {
   padding: 12px 24px;
   margin: 0 0 8px;
   border-radius: 28px;
+  width: 100%;
+  align-self: stretch;
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);

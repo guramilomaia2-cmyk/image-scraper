@@ -362,7 +362,7 @@ export default function App() {
   const showGrid = displayImages.length > 0;
 
   return (
-    <div style={{ position: 'relative', zIndex: 1, maxWidth: '1200px', margin: '0 auto', padding: '24px 40px 64px' }}>
+    <div style={{ position: 'relative', zIndex: 1, maxWidth: '1200px', margin: '0 auto', padding: '24px 40px 64px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <Header />
 
       {/* Hero Section - Clean, bold, and modern */}
@@ -422,7 +422,7 @@ export default function App() {
 
       {/* Sticky Controls Wrapper */}
       {showControls && !isLoading && (
-        <div className="sticky z-40 transition-all duration-300" style={{ top: '177px' }}>
+        <div className="sticky z-40 transition-all duration-300 w-full" style={{ top: '177px' }}>
           <ControlsBar
             sortValue={sortValue}
             onSortChange={handleSortChange}
